@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'depedsfportal',
     'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -135,3 +136,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+JAZZMIN_SETTINGS = {
+    "site_title": "DEPEDSF10",
+    "site_header": "Deped SF10",
+    "site_brand": "DEPEDSF10",
+    "welcome_sign": "Welcome to Deped SF10 Admin",
+    "site_logo": "logo.png",
+    "copyright": "ArSystems",
+}
