@@ -3,13 +3,16 @@
 {% block title %}Academic Record Detail - DepEd SF10{% endblock %}
 
 {% block content %}
+
+<a href="{% url 'teacher_dashboard' %}" class="text-deped-blue hover:underline">← Back to Dashboard</a><br><br>
+
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Academic Record: Grade {{ record.grade_level }}</h1>
-            <p class="text-gray-600">Student: <strong>{{ record.student.last_name }}, {{ record.student.first_name }}
-                </strong> (LRN: {{ record.student.lrn }})</p>
+            <h2 class="text-gray-600">Student: <strong>{{ record.student.last_name }}, {{ record.student.first_name }}
+                </strong> (LRN: {{ record.student.lrn }})</h2>
             <p class="text-sm text-gray-500">School Year: {{ record.school_year }} | Section: {{ record.section }}</p>
         </div>
         <div>

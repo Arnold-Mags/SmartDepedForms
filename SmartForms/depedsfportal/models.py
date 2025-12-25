@@ -240,13 +240,14 @@ class LearningArea(models.Model):
     """
 
     GRADE_LEVEL_CHOICES = [
-        ("1-3", "Grades 1-3"),
-        ("4-6", "Grades 4-6"),
-        ("7-10", "Grades 7-10"),
+        ("7", "Grade 7"),
+        ("8", "Grade 8"),
+        ("9", "Grade 9"),
+        ("10", "Grade 10"),
         ("ALL", "All Grades"),
     ]
 
-    code = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
     applicable_grades = models.CharField(max_length=10, choices=GRADE_LEVEL_CHOICES)
     is_core = models.BooleanField(default=True)
@@ -259,6 +260,7 @@ class LearningArea(models.Model):
         ordering = ["order", "name"]
         verbose_name = "Learning Area"
         verbose_name_plural = "Learning Areas"
+        unique_together = ["code", "applicable_grades"]
 
     def __str__(self):
         return f"{self.name} ({self.applicable_grades})"
@@ -266,17 +268,11 @@ class LearningArea(models.Model):
     @classmethod
     def get_subjects_for_grade(cls, grade_level):
         """Get applicable subjects for a specific grade level"""
-        if 1 <= grade_level <= 3:
-            grade_range = "1-3"
-        elif 4 <= grade_level <= 6:
-            grade_range = "4-6"
-        elif 7 <= grade_level <= 10:
-            grade_range = "7-10"
-        else:
-            return cls.objects.none()
+        # Convert grade_level to string for comparison
+        grade_str = str(grade_level)
 
         return cls.objects.filter(
-            models.Q(applicable_grades=grade_range) | models.Q(applicable_grades="ALL")
+            models.Q(applicable_grades=grade_str) | models.Q(applicable_grades="ALL")
         ).filter(is_core=True)
 
 

@@ -1,4 +1,7 @@
 {% extends 'form_base.html' %}
 
 {% block title %}Manage Learning Area{% endblock %}
+{% block breadcrumbs %}
+<a href="{% url 'learning_area_list' %}" class="text-deped-blue hover:underline">← Back to Learning Areas</a>
+{% endblock %}
 {% block form_title %}Learning Area Details{% endblock %}

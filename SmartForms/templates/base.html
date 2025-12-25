@@ -105,10 +105,9 @@
 
         .dataTables_wrapper .dataTables_paginate .paginate_button.current,
         .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-            background: #003366 !important;
-            /* DepEd Blue */
-            color: white !important;
-            border-color: #003366 !important;
+            background: #fff !important;
+            color: #003366 !important;
+            border-color: #e5e7eb !important;
         }
 
         .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
@@ -165,7 +164,6 @@
     <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% block breadcrumbs %}
-        {% include 'partials/breadcrumbs.html' %}
         {% endblock %}
         {% if messages %}
         <div class="mb-6 space-y-2">

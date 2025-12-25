@@ -1,4 +1,7 @@
 {% extends 'form_base.html' %}
 
 {% block title %}Manage Grade{% endblock %}
+{% block breadcrumbs %}
+<a href="{% url 'teacher_dashboard' %}" class="text-deped-blue hover:underline">← Back to Dashboard</a>
+{% endblock %}
 {% block form_title %}Subject Grade Entry{% endblock %}
