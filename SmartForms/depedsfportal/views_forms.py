@@ -131,6 +131,14 @@ class LearningAreaListView(LoginRequiredMixin, TeacherAccessMixin, ListView):
     template_name = "learning_area_list.html"
     context_object_name = "learning_areas"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        by_grade = {}
+        for grade, label in AcademicRecord.GRADE_CHOICES:
+            by_grade[label] = LearningArea.get_subjects_for_grade(grade)
+        context["by_grade"] = by_grade
+        return context
+
 
 class LearningAreaCreateView(LoginRequiredMixin, TeacherAccessMixin, CreateView):
     model = LearningArea
