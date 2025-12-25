@@ -3,10 +3,9 @@ services:
     name: smartdepedforms
     env: python
     plan: free
-    region: singapore   # closest to PH, better latency
+    region: singapore
     branch: main
 
-    # 👇 IMPORTANT: Django project is inside SmartForms/
     rootDir: SmartForms
 
     buildCommand: |
@@ -21,11 +20,8 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: SmartForms.settings
 
-      - key: PYTHON_VERSION
-        value: 3.11.9
-
       - key: DEBUG
-        value: False
+        value: "False"
 
       - key: SECRET_KEY
         generateValue: true
