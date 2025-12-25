@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
 from django.db.models import Count, Avg, Q
 from django.http import JsonResponse
-from .models import Student, AcademicRecord, SubjectGrade
+from .models import Student, AcademicRecord, SubjectGrade, LearningArea
 
 
 class DashboardRedirectView(LoginRequiredMixin, RedirectView):
@@ -40,22 +40,24 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         # Get all students for the table
         students = self.get_queryset()
-        context['students'] = students
-        
+        context["students"] = students
+
         # Calculate counts for each status
         enrolled_count = students.filter(status="ENROLLED").count()
         transferred_count = students.filter(status="TRANSFERRED").count()
         dropped_count = students.filter(status="DROPPED").count()
-        
-        context.update({
-            'enrolled_count': enrolled_count,
-            'transferred_count': transferred_count,
-            'dropped_count': dropped_count,
-        })
-        
+
+        context.update(
+            {
+                "enrolled_count": enrolled_count,
+                "transferred_count": transferred_count,
+                "dropped_count": dropped_count,
+            }
+        )
+
         return context
 
 
@@ -111,10 +113,12 @@ class PrincipalDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 "chart_performance_data": [
                     passed_count + promoted_count,
                     failed_count + retained_count,
-                    # Assuming 'remedial' might be a remarks status eventually, or use 'PROMOTED' vs 'PASSED' distinction
-                    # For now, let's just stick to Pass/Fail/Remedial if available, or just Pass/Fail
-                    0,  # Placeholder for Remedial if we want it separate
+                    0,  # Placeholder for Remedial
                 ],
+                "by_grade": {
+                    label: LearningArea.get_subjects_for_grade(grade)
+                    for grade, label in AcademicRecord.GRADE_CHOICES
+                },
             }
         )
         return context
@@ -125,18 +129,20 @@ def dashboard_stats_api(request):
     API endpoint to get real-time dashboard statistics
     """
     if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-    
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
     # Get all students
     students = Student.objects.all()
-    
+
     # Calculate counts for each status
     enrolled_count = students.filter(status="ENROLLED").count()
     transferred_count = students.filter(status="TRANSFERRED").count()
     dropped_count = students.filter(status="DROPPED").count()
-    
-    return JsonResponse({
-        'enrolled_count': enrolled_count,
-        'transferred_count': transferred_count,
-        'dropped_count': dropped_count,
-    })
+
+    return JsonResponse(
+        {
+            "enrolled_count": enrolled_count,
+            "transferred_count": transferred_count,
+            "dropped_count": dropped_count,
+        }
+    )

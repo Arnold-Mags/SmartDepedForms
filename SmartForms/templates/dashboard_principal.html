@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <!-- Charts Section (Placeholder) -->
+    <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Enrollment Trends</h3>
@@ -88,6 +88,41 @@
             <div class="h-64 rounded flex items-center justify-center">
                 <canvas id="performanceChart"></canvas>
             </div>
+        </div>
+    </div>
+
+    <!-- Learning Areas by Grade Level -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Offered Subjects by Grade Level</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for grade_label, subjects in by_grade.items %}
+            <div class="bg-white shadow rounded-lg p-6 flex flex-col h-full border-t-2 border-deped-blue">
+                <h3 class="text-lg font-bold text-deped-blue mb-4 uppercase">{{ grade_label }}</h3>
+                <div class="overflow-y-auto max-h-64 flex-grow">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for subject in subjects %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-3 py-2 text-xs font-medium text-gray-900">{{ subject.code }}</td>
+                                <td class="px-3 py-2 text-xs text-gray-600">{{ subject.name }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="px-3 py-4 text-center text-xs text-gray-400 italic">No subjects
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
