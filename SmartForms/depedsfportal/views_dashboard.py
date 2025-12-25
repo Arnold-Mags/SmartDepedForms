@@ -2,6 +2,7 @@ from django.views.generic import TemplateView, ListView, RedirectView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
 from django.db.models import Count, Avg, Q
+from django.http import JsonResponse
 from .models import Student, AcademicRecord, SubjectGrade
 
 
@@ -36,6 +37,26 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def get_queryset(self):
         return Student.objects.all().order_by("last_name", "first_name")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get all students for the table
+        students = self.get_queryset()
+        context['students'] = students
+        
+        # Calculate counts for each status
+        enrolled_count = students.filter(status="ENROLLED").count()
+        transferred_count = students.filter(status="TRANSFERRED").count()
+        dropped_count = students.filter(status="DROPPED").count()
+        
+        context.update({
+            'enrolled_count': enrolled_count,
+            'transferred_count': transferred_count,
+            'dropped_count': dropped_count,
+        })
+        
+        return context
 
 
 class PrincipalDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
@@ -97,3 +118,25 @@ class PrincipalDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             }
         )
         return context
+
+
+def dashboard_stats_api(request):
+    """
+    API endpoint to get real-time dashboard statistics
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    # Get all students
+    students = Student.objects.all()
+    
+    # Calculate counts for each status
+    enrolled_count = students.filter(status="ENROLLED").count()
+    transferred_count = students.filter(status="TRANSFERRED").count()
+    dropped_count = students.filter(status="DROPPED").count()
+    
+    return JsonResponse({
+        'enrolled_count': enrolled_count,
+        'transferred_count': transferred_count,
+        'dropped_count': dropped_count,
+    })

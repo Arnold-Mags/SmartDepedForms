@@ -40,22 +40,56 @@
 
     <!-- Stats Overview (Mini) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white p-4 rounded-lg shadow border-l-4 border-deped-blue">
+        <div class="bg-white p-4 rounded-lg shadow border-l-4 border-deped-yellow">
             <div class="flex items-center">
-                <div class="p-3 bg-blue-50 rounded-full text-deped-blue mr-4">
+                <div class="p-3 bg-green-50 rounded-full text-green-600 mr-4">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
                         </path>
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Total Students</p>
-                    <p class="text-2xl font-bold">{{ students|length }}</p>
+                    <p class="text-sm text-gray-500">Total Enrolled Students</p>
+                    <p class="text-2xl font-bold" id="enrolled-count">{{ enrolled_count }}</p>
+                </div>
+            </div>
+        </div>
+
+         <div class="bg-white p-4 rounded-lg shadow border-l-4 border-deped-blue">
+            <div class="flex items-center">
+                <div class="p-3 bg-orange-50 rounded-full text-orange-600 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total Transferred Students</p>
+                    <p class="text-2xl font-bold" id="transferred-count">{{ transferred_count }}</p>
+                </div>
+            </div>
+        </div>
+
+         <div class="bg-white p-4 rounded-lg shadow border-l-4 border-deped-red">
+            <div class="flex items-center">
+                <div class="p-3 bg-red-50 rounded-full text-red-600 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total Dropped Students</p>
+                    <p class="text-2xl font-bold" id="dropped-count">{{ dropped_count }}</p>
                 </div>
             </div>
         </div>
     </div>
+
+    
 
     <!-- Student List Table -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
@@ -176,4 +210,64 @@
         <!-- Manual Pagination Removed (Handled by DataTables) -->
     </div>
 </div>
+
+<script>
+// Dynamic dashboard stats update
+function updateDashboardStats() {
+    fetch('/api/dashboard-stats/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update the count displays with animation
+            updateCount('enrolled-count', data.enrolled_count);
+            updateCount('transferred-count', data.transferred_count);
+            updateCount('dropped-count', data.dropped_count);
+        })
+        .catch(error => {
+            console.error('Error updating dashboard stats:', error);
+        });
+}
+
+function updateCount(elementId, newCount) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const oldCount = parseInt(element.textContent);
+        if (oldCount !== newCount) {
+            // Add animation class
+            element.style.transition = 'all 0.3s ease';
+            element.style.transform = 'scale(1.1)';
+            element.style.color = '#059669'; // Green color for update
+            
+            // Update the count
+            element.textContent = newCount;
+            
+            // Remove animation after delay
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+                element.style.color = '';
+            }, 300);
+        }
+    }
+}
+
+// Auto-update every 30 seconds
+setInterval(updateDashboardStats, 30000);
+
+// Also update when page becomes visible again (user returns to tab)
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        updateDashboardStats();
+    }
+});
+
+// Initial update when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateDashboardStats();
+});
+</script>
+
 {% endblock %}

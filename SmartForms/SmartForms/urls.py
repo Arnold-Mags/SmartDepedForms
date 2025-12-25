@@ -22,6 +22,7 @@ from depedsfportal.views_dashboard import (
     DashboardRedirectView,
     TeacherDashboardView,
     PrincipalDashboardView,
+    dashboard_stats_api,
 )
 from depedsfportal.views_forms import (
     SchoolUpdateView,
@@ -68,6 +69,8 @@ urlpatterns = [
         PrincipalDashboardView.as_view(),
         name="principal_dashboard",
     ),
+    # API endpoints
+    path("api/dashboard-stats/", dashboard_stats_api, name="dashboard_stats_api"),
     # Forms - Principal
     path("school/settings/", SchoolUpdateView.as_view(), name="school_settings"),
     # Forms - Teacher
