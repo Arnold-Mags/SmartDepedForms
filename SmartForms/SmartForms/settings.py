@@ -79,15 +79,26 @@ WSGI_APPLICATION = "SmartForms.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
+    #Local Development
+    #"default": {
         #'ENGINE': 'django.db.backends.sqlite3',
         #'NAME': BASE_DIR / 'db.sqlite3',
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "SmartFormsDB",
-        "USER": "postgres",
-        "PASSWORD": "admin12345",
-        "HOST": "localhost",
-        "PORT": "5432",
+    #    "ENGINE": "django.db.backends.postgresql",
+    #    "NAME": "SmartFormsDB",
+    #    "USER": "postgres",
+    #    "PASSWORD": "admin12345",
+    #    "HOST": "localhost",
+    #    "PORT": "5432",
+    #}
+
+    #Render Deployment
+     'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'smartforms_depedsf',
+        'USER': 'smartforms_depedsf_user',
+        'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',
+        'HOST': 'dpg-d56l343uibrs739m9ta0-a',
+        'PORT': '5432',
     }
 }
 
