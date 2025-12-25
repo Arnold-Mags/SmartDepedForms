@@ -41,7 +41,14 @@ from depedsfportal.views_reports import (
     ReportDashboardView,
     ExportReportCSVView,
     ExportReportPDFView,
+    ExportReportPDFView,
     AnalyticsDashboardView,
+)
+from depedsfportal.views_import import StudentImportView
+
+from depedsfportal.views_sf10 import (
+    SF10PrintView,
+    SF10PreviewView,
 )
 
 urlpatterns = [
@@ -106,6 +113,11 @@ urlpatterns = [
         "reports/export/pdf/", ExportReportPDFView.as_view(), name="export_report_pdf"
     ),
     path("analytics/", AnalyticsDashboardView.as_view(), name="analytics_dashboard"),
+    # Import
+    path("import/students/", StudentImportView.as_view(), name="student_import"),
+    # SF10 Print
+    path("sf10/print/<str:lrn>/", SF10PrintView.as_view(), name="sf10_print"),
+    path("sf10/preview/<str:lrn>/", SF10PreviewView.as_view(), name="sf10_preview"),
 ]
 
 from django.conf import settings
