@@ -1,24 +1,27 @@
 services:
   - type: web
-    name: smartdepedforms
+    name: SmartDepedForms
     env: python
-    plan: free
-    region: singapore
     branch: main
-
     rootDir: SmartForms
+    region: singapore
+    plan: free
 
     buildCommand: |
-      pip install --upgrade pip
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
-      python manage.py migrate
 
     startCommand: gunicorn SmartForms.wsgi:application
+
+    postDeploy: >
+      python manage.py migrate
 
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: SmartForms.settings
+
+      - key: PYTHON_VERSION
+        value: 3.11.9
 
       - key: DEBUG
         value: "False"
@@ -26,5 +29,12 @@ services:
       - key: SECRET_KEY
         generateValue: true
 
-      - key: ALLOWED_HOSTS
-        value: .onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smartdepedforms-db
+          property: connectionString
+
+
+databases:
+  - name: smartdepedforms-db
+    plan: free
