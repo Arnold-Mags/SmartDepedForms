@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p class="text-gray-600">Manage student records and grades.</p>
+        </div>
+        <div class="space-x-2">
+            <a href="{% url 'learning_area_list' %}"
+                class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm transition duration-150">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                    </path>
+                </svg>
+                Manage Subjects
+            </a>
+            <a href="{% url 'student_add' %}"
+                class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm transition duration-150">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add New Student
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Overview (Mini) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-lg shadow border-l-4 border-deped-blue">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-50 rounded-full text-deped-blue mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total Students</p>
+                    <p class="text-2xl font-bold">{{ students|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student List Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Student Records</h3>
+        </div>
+        <div class="min-w-full overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 datatable">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LRN
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Gender</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade
+                            Level</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for student in students %}
+                    <tr class="hover:bg-gray-50 transition duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ student.lrn }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ student.last_name }}, {{ student.first_name }} {{ student.middle_name|default:"" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ student.get_sex_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if student.status == 'ENROLLED' %}bg-green-100 text-green-800
+                                {% elif student.status == 'TRANSFERRED' %}bg-orange-100 text-orange-800
+                                {% elif student.status == 'DROPPED' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ student.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <!-- Helper to show latest record or button to add -->
+                            {% with latest_record=student.academic_records.last %}
+                            {% if latest_record %}
+                            Grade {{ latest_record.grade_level }}
+                            {% else %}
+                            <a href="{% url 'record_add' student.pk %}" class="text-xs text-deped-blue underline">Enroll
+                                in Grade</a>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{% url 'student_edit' student.pk %}"
+                                class="text-deped-blue hover:text-blue-900 mr-2">Edit Info</a>
+                            {% with latest_record=student.academic_records.last %}
+                            {% if latest_record %}
+                            <a href="{% url 'record_detail' latest_record.pk %}"
+                                class="text-gray-600 hover:text-gray-900">View Records</a>
+                            {% else %}
+                            <span class="text-gray-400 cursor-not-allowed">No Records</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <!-- DataTables handles empty state, but keeping this for backup -->
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Manual Pagination Removed (Handled by DataTables) -->
+    </div>
+</div>
+{% endblock %}

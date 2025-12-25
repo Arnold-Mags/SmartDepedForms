@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-100">
+        <div class="bg-deped-blue py-4 px-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-white">{% block form_title %}Form{% endblock %}</h2>
+        </div>
+
+        <form method="post" class="p-6 space-y-4" {% block form_attributes %}{% endblock %}>
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="bg-red-50 text-red-700 p-4 rounded text-sm">
+                {{ form.errors }}
+            </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="pt-4 flex justify-end space-x-3">
+                <a href="javascript:history.back()"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition duration-150">Cancel</a>
+                <button type="submit"
+                    class="bg-deped-blue hover:bg-blue-800 text-white px-6 py-2 rounded-md font-medium shadow transition duration-150">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

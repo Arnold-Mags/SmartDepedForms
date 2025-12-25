@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Learning Areas - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Learning Areas</h1>
+            <p class="text-gray-600">Configure subjects offered by the school.</p>
+        </div>
+        <a href="{% url 'learning_area_add' %}"
+            class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add New Subject
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Subject List</h3>
+        </div>
+        <table class="min-w-full divide-y divide-gray-200 datatable">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject
+                        Code</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Subject Name</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for area in learning_areas %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ area.code }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ area.name|default:"-" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-2">
+                        <a href="{% url 'learning_area_edit' area.pk %}"
+                            class="text-deped-blue hover:text-blue-900">Edit</a>
+
+                        <form id="delete-learning-area-{{ area.pk }}" action="{% url 'learning_area_delete' area.pk %}"
+                            method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="button" onclick="confirmDelete('delete-learning-area-{{ area.pk }}')"
+                                class="text-red-600 hover:text-red-900 ml-2">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="px-6 py-10 text-center text-gray-500">No learning areas found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

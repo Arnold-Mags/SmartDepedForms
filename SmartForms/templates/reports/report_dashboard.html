@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Principal Reports - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Student Reports</h1>
+            <p class="text-gray-600">Filter and generate student records.</p>
+        </div>
+        <div class="space-x-2">
+            <a href="{% url 'export_report_csv' %}?{{ request.GET.urlencode }}"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                Export CSV
+            </a>
+            <a href="{% url 'export_report_pdf' %}?{{ request.GET.urlencode }}" target="_blank"
+                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                    </path>
+                </svg>
+                Export PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="bg-white p-4 rounded-lg shadow space-y-4">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label for="year" class="block text-sm font-medium text-gray-700">School Year</label>
+                <input type="text" name="year" id="year" value="{{ current_filters.year }}" placeholder="2024-2025"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-deped-blue focus:border-deped-blue sm:text-sm">
+            </div>
+            <div>
+                <label for="grade" class="block text-sm font-medium text-gray-700">Grade Level</label>
+                <select name="grade" id="grade"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-deped-blue focus:border-deped-blue sm:text-sm">
+                    <option value="">All Levels</option>
+                    <option value="7" {% if current_filters.grade == '7' %}selected{% endif %}>Grade 7</option>
+                    <option value="8" {% if current_filters.grade == '8' %}selected{% endif %}>Grade 8</option>
+                    <option value="9" {% if current_filters.grade == '9' %}selected{% endif %}>Grade 9</option>
+                    <option value="10" {% if current_filters.grade == '10' %}selected{% endif %}>Grade 10</option>
+                </select>
+            </div>
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                <select name="status" id="status"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-deped-blue focus:border-deped-blue sm:text-sm">
+                    <option value="">All Statuses</option>
+                    <option value="ENROLLED" {% if current_filters.status == 'ENROLLED' %}selected{% endif %}>Enrolled
+                    </option>
+                    <option value="TRANSFERRED" {% if current_filters.status == 'TRANSFERRED' %}selected{% endif %}>
+                        Transferred Out</option>
+                    <option value="DROPPED" {% if current_filters.status == 'DROPPED' %}selected{% endif %}>Dropped
+                    </option>
+                    <!-- Add Pass/Fail logic later if complex filtering needed -->
+                </select>
+            </div>
+            <div>
+                <button type="submit"
+                    class="w-full bg-deped-blue text-white px-4 py-2 rounded-md hover:bg-blue-800 transition">Apply
+                    Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Table -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Report Results</h3>
+        </div>
+        <table class="min-w-full divide-y divide-gray-200 datatable">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LRN</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for student in students %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ student.lrn }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ student.last_name }},
+                        {{ student.first_name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        {% if student.status == 'ENROLLED' %}bg-green-100 text-green-800
+                        {% elif student.status == 'TRANSFERRED' %}bg-yellow-100 text-yellow-800
+                        {% elif student.status == 'DROPPED' %}bg-red-100 text-red-800{% endif %}">
+                            {{ student.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ student.city }},
+                        {{ student.province }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">No records found matching criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

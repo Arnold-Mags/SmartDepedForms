@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Principal Dashboard - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Principal Dashboard</h1>
+            <p class="text-gray-600">Overview of school academic performance.</p>
+        </div>
+        <div class="flex items-center">
+            <a href="{% url 'report_dashboard' %}"
+                class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm mr-2">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                Reports
+            </a>
+            <a href="{% url 'analytics_dashboard' %}"
+                class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm mr-2">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                    </path>
+                </svg>
+                Analytics
+            </a>
+            <a href="{% url 'school_settings' %}"
+                class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                    </path>
+                </svg>
+                Manage School Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Enrolled -->
+        <div class="bg-white rounded-lg shadow p-6 border-t-4 border-blue-500">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Enrolled</h3>
+            <div class="mt-2 text-3xl font-bold text-gray-900">{{ enrolled_count }}</div>
+            <div class="flex space-x-2 text-xs mt-1 text-gray-500">
+                <span>Dropped: {{ dropped_count }}</span>
+                <span>Transferred: {{ transferred_count }}</span>
+            </div>
+        </div>
+
+        <!-- Passed -->
+        <div class="bg-white rounded-lg shadow p-6 border-t-4 border-green-500">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Passed</h3>
+            <div class="mt-2 text-3xl font-bold text-gray-900">{{ passed_count }}</div>
+            <p class="text-xs text-green-600 mt-1">Learners promoted</p>
+        </div>
+
+        <!-- Failed/Retained -->
+        <div class="bg-white rounded-lg shadow p-6 border-t-4 border-red-500">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Needs Attention</h3>
+            <div class="mt-2 text-3xl font-bold text-gray-900">{{ failed_count }}</div>
+            <p class="text-xs text-red-600 mt-1">Failed or Retained</p>
+        </div>
+
+        <!-- Total Records -->
+        <div class="bg-white rounded-lg shadow p-6 border-t-4 border-yellow-500">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Students</h3>
+            <div class="mt-2 text-3xl font-bold text-gray-900">{{ total_students }}</div>
+            <p class="text-xs text-gray-500 mt-1">All records</p>
+        </div>
+    </div>
+
+    <!-- Charts Section (Placeholder) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Enrollment Trends</h3>
+            <div class="h-64 rounded flex items-center justify-center">
+                <canvas id="enrollmentChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Performance Overview</h3>
+            <div class="h-64 rounded flex items-center justify-center">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Enrollment Chart
+        const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
+        const enrollmentData = {{ enrollment_by_grade| safe
+    }};
+
+    // Map simplified grade levels to labels
+    const gradeLabels = enrollmentData.map(item => 'Grade ' + item.grade_level); // Direct mapping
+    const gradeCounts = enrollmentData.map(item => item.count);
+
+    new Chart(enrollmentCtx, {
+        type: 'bar',
+        data: {
+            labels: gradeLabels.length ? gradeLabels : ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'], // Fallback
+            datasets: [{
+                label: 'Students Enrolled',
+                data: gradeLabels.length ? gradeCounts : [0, 0, 0, 0],
+                backgroundColor: '#003366',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+
+    // Performance Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    const performanceData = {{ chart_performance_data| safe }}; // [Passed, Failed, Remedial]
+
+    new Chart(performanceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Passed', 'Failed/Retained', 'Needs Remedial'],
+            datasets: [{
+                data: performanceData,
+                backgroundColor: [
+                    '#10B981', // Green for Passed
+                    '#EF4444', // Red for Failed
+                    '#F59E0B'  // Yellow for Remedial
+                ],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    });
+</script>
+</div>
+{% endblock %}

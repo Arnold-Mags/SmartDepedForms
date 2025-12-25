@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Academic Record Detail - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Academic Record: Grade {{ record.grade_level }}</h1>
+            <p class="text-gray-600">Student: <strong>{{ record.student.last_name }}, {{ record.student.first_name }}
+                </strong> (LRN: {{ record.student.lrn }})</p>
+            <p class="text-sm text-gray-500">School Year: {{ record.school_year }} | Section: {{ record.section }}</p>
+        </div>
+        <div>
+            <a href="{% url 'grade_add' record.pk %}"
+                class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Grade Entry
+            </a>
+        </div>
+    </div>
+
+    <!-- Grades Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">Scholastic Achievement</h3>
+        </div>
+        <table class="min-w-full divide-y divide-gray-200 datatable">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Learning
+                        Area</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Q1</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Q2</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Q3</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Q4</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Final
+                    </th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for grade in grades %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ grade.learning_area.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_1|default:"-" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_2|default:"-" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_3|default:"-" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_4|default:"-" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold">
+                        {{ grade.final_grade|default:"-" }}</td>
+                    <td
+                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-center space-x-2">
+                        <a href="{% url 'grade_edit' grade.pk %}" class="text-deped-blue hover:text-blue-900">Edit</a>
+
+                        <form id="delete-grade-{{ grade.pk }}" action="{% url 'grade_delete' grade.pk %}" method="post"
+                            class="inline">
+                            {% csrf_token %}
+                            <!-- Reuse global confirmDelete -->
+                            <button type="button" onclick="confirmDelete('delete-grade-{{ grade.pk }}')"
+                                class="text-red-600 hover:text-red-900 ml-2">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-10 text-center text-gray-500">No grades recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DepEd SF10 Automation{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        deped: {
+                            blue: '#003366',
+                            red: '#cc0000',
+                            yellow: '#foc419'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Modern Minimalist DataTables Overrides */
+        .dataTables_wrapper {
+            padding: 1.5rem;
+            /* Add breathing room inside the card */
+        }
+
+        /* Filter & Length Menu */
+        .dataTables_wrapper .dataTables_length select {
+            padding-right: 2rem;
+            padding-left: 0.75rem;
+            padding-top: 0.375rem;
+            padding-bottom: 0.375rem;
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            color: #374151;
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        .dataTables_wrapper .dataTables_length select:focus {
+            border-color: #003366;
+            ring: 1px solid #003366;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            margin-left: 0.75rem;
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #003366;
+            box-shadow: 0 0 0 1px #003366;
+        }
+
+        /* Table Spacing */
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #e5e7eb;
+            margin-top: 1rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        /* Pagination & Info */
+        .dataTables_wrapper .dataTables_info {
+            color: #6b7280;
+            font-size: 0.875rem;
+            padding-top: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            padding-top: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 0.375rem !important;
+            border: 1px solid #e5e7eb !important;
+            background: white !important;
+            color: #374151 !important;
+            font-size: 0.875rem;
+            margin-left: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+            border-color: #d1d5db !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: #003366 !important;
+            /* DepEd Blue */
+            color: white !important;
+            border-color: #003366 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+            color: #d1d5db !important;
+            border-color: #e5e7eb !important;
+            background: #fff !important;
+            cursor: not-allowed;
+        }
+    </style>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-gradient-to-r from-deped-blue to-deped-red text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center space-x-2">
+                        <!-- Dynamic Logo -->
+                        {% if school and school.logo %}
+                        <img src="{{ school.logo.url }}" alt="School Logo"
+                            class="h-10 w-10 rounded-full object-cover bg-white">
+                        {% else %}
+                        <div
+                            class="h-10 w-10 bg-white rounded-full flex items-center justify-center text-deped-blue font-bold">
+                            D</div>
+                        {% endif %}
+                        <span class="font-bold text-xl tracking-tight">
+                            {% if school %}{{ school.name }}{% else %}DepEd SF10 System{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                    <span class="text-sm opacity-90">Welcome, {{ user.first_name }}</span>
+                    <form action="{% url 'logout' %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit"
+                            class="bg-deped-red hover:bg-red-700 px-4 py-2 rounded-md text-sm font-medium transition duration-150">Logout</button>
+                    </form>
+                    {% else %}
+                    <a href="https://www.deped.gov.ph/"
+                        class="hover:bg-yellow-800 px-3 py-2 rounded-md text-sm font-medium" target="_blank">Go to
+                        Website</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block breadcrumbs %}
+        {% include 'partials/breadcrumbs.html' %}
+        {% endblock %}
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+            <div
+                class="p-4 rounded-md shadow-sm {% if message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-green-50 text-green-700{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <p class="text-center text-gray-500 text-sm">
+                &copy; {% now "Y" %} Department of Education - SF10 Automation System. All rights reserved.
+            </p>
+        </div>
+    </footer>
+    <!-- jQuery and DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% include 'partials/_datatables_script.html' %}
+    {% include 'partials/_custom_script.html' %}
+</body>
+
+</html>

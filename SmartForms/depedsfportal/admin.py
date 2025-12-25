@@ -15,6 +15,9 @@ class StudentAdmin(admin.ModelAdmin):
         ('Enrollment Eligibility', {
             'fields': ('credential_presented', 'other_credential', 'pept_rating', 'pept_date', 'pept_testing_center')
         }),
+        ('Address Information', {
+            'fields': ('country', 'region', 'province', 'city', 'barangay', 'address_line1')
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
