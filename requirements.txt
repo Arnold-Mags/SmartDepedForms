@@ -19,3 +19,6 @@ tzdata==2025.2
 weasyprint==67.0
 webencodings==0.5.1
 zopfli==0.4.0
+gunicorn
+dj-database-url
+whitenoise
