@@ -56,7 +56,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_3|default:"-" }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_4|default:"-" }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold">
-                        {{ grade.final_grade|default:"-" }}</td>
+                        {{ grade.final_rating|default:"-" }}</td>
                     <td
                         class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-center space-x-2">
                         <a href="{% url 'grade_edit' grade.pk %}" class="text-deped-blue hover:text-blue-900">Edit</a>
