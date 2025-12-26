@@ -75,9 +75,9 @@ urlpatterns = [
     path("school/settings/", SchoolUpdateView.as_view(), name="school_settings"),
     # Forms - Teacher
     path("student/add/", StudentCreateView.as_view(), name="student_add"),
-    path("student/<int:pk>/edit/", StudentUpdateView.as_view(), name="student_edit"),
+    path("student/<str:pk>/edit/", StudentUpdateView.as_view(), name="student_edit"),
     path(
-        "student/<int:student_pk>/record/add/",
+        "student/<str:student_pk>/record/add/",
         AcademicRecordCreateView.as_view(),
         name="record_add",
     ),

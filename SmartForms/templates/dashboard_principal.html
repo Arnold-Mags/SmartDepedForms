@@ -132,7 +132,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Enrollment Chart
         const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
-        const enrollmentData = {{ enrollment_by_grade| safe }};
+        const enrollmentData = {{ enrollment_by_grade| safe
+    }};
 
     // Map simplified grade levels to labels
     const gradeLabels = enrollmentData.map(item => 'Grade ' + item.grade_level); // Direct mapping
