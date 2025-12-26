@@ -80,16 +80,16 @@ WSGI_APPLICATION = "SmartForms.wsgi.application"
 
 DATABASES = {
     #Local Development
-    #"default": {
-        #'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': BASE_DIR / 'db.sqlite3',
-    #    "ENGINE": "django.db.backends.postgresql",
-    #    "NAME": "SmartFormsDB",
-    #    "USER": "postgres",
-    #    "PASSWORD": "admin12345",
-    #    "HOST": "localhost",
-    #    "PORT": "5432",
-    #}
+    "default": {
+       # 'ENGINE': 'django.db.backends.sqlite3',
+      #  'NAME': BASE_DIR / 'db.sqlite3',
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "SmartFormsDB",
+        "USER": "postgres",
+        "PASSWORD": "admin12345",
+        "HOST": "localhost",
+        "PORT": "5432",
+    }
 
     #Render Deployment
     # 'default': {
@@ -102,14 +102,14 @@ DATABASES = {
     #}
 
      # Using Render's DATABASE_URL environment variable
-    'default':{
-       'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'smartforms_depedsf',  # database name
-        'USER': 'smartforms_depedsf_user',  # username
-        'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',  # password
-        'HOST': 'dpg-d56l343uibrs739m9ta0-a.virginia-postgres.render.com',  # host
-        'PORT': '5432',  # default PostgreSQL port
-    }
+    #'default':{
+    #   'ENGINE': 'django.db.backends.postgresql',
+    #    'NAME': 'smartforms_depedsf',  # database name
+    #    'USER': 'smartforms_depedsf_user',  # username
+    #    'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',  # password
+    #    'HOST': 'dpg-d56l343uibrs739m9ta0-a.virginia-postgres.render.com',  # host
+    #    'PORT': '5432',  # default PostgreSQL port
+    #}
 }
 
 
