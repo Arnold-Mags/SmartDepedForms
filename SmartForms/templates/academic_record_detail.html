@@ -14,17 +14,16 @@
         <div class="flex justify-between items-start mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Academic Record: Grade {{ record_item.grade_level }}</h1>
-                <h2 class="text-gray-600">Student: <strong>{{ record_item.student.last_name }}, {{ record_item.student.first_name }}
-                    </strong> (LRN: {{ record_item.student.lrn }})</h2>
+                <h2 class="text-gray-600">Student: <strong>{{ record_item.student.last_name }}, {{ record_item.student.first_name }}</strong> (LRN: {{ record_item.student.lrn }})</h2>
                 <p class="text-sm text-gray-500">
                     School Year: <span class="font-bold text-deped-blue">{{ record_item.school_year }}</span> |
                     Section: {{ record_item.section|default:"<span class='text-red-500 italic'>Pending Assignment</span>" }}
                 </p>
             </div>
 
-            <!-- Actions (Only show for the 'active' or specific record if needed, OR show for all if appropriate) -->
-            <!-- Typically, we might only want to allow editing the CURRENT record, or all. Assuming all are editable by teachers. -->
+            <!-- Actions: Only show for the CURRENT active record (Not yet finalized) -->
             <div class="flex flex-col space-y-2">
+                {% if not record_item.remarks or record_item.remarks == 'PASSED' or record_item.remarks == 'FAILED' %}
                 <a href="{% url 'grade_add' record_item.pk %}"
                     class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm text-sm justify-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,8 +33,7 @@
                 </a>
 
                 <div class="flex space-x-2">
-                    <!-- Promote/Retain Actions (Hidden only if Graduated) -->
-                    {% if record_item.remarks != 'GRADUATED' %}
+                    <!-- Promote/Retain Actions -->
                     <form id="promote-form-{{ record_item.pk }}" action="{% url 'record_promote' record_item.pk %}"
                         method="post" class="inline">
                         {% csrf_token %}
@@ -64,8 +62,18 @@
                             Retain
                         </button>
                     </form>
-                    {% endif %}
                 </div>
+                {% else %}
+                <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Archived Record
+                </span>
+                {% endif %}
             </div>
         </div>
 
@@ -111,8 +119,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Learning
-                            Area</th>
+                            Learning Area</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Q1
                         </th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Q2
@@ -122,11 +129,9 @@
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Q4
                         </th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Final
-                        </th>
+                            Final</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                        </th>
+                            Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -136,9 +141,7 @@
                             {{ grade.learning_area.name }}
                             {% if grade.final_rating < 75 %} <span
                                 class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                Failed
-                                </span>
-                                {% endif %}
+                                Failed</span>{% endif %}
                                 {% if grade.recomputed_final_grade %}
                                 <div class="text-xs text-green-600 mt-1">
                                     Recomputed: <strong>{{ grade.recomputed_final_grade }}</strong> (Passed vs Remedial)
@@ -158,19 +161,21 @@
                             {{ grade.final_rating|default:"-" }}</td>
                         <td
                             class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-center space-x-3">
+                            {% if record_item.remarks != 'PROMOTED' and record_item.remarks != 'RETAINED' %}
                             <a href="{% url 'grade_edit' grade.pk %}"
                                 class="text-deped-blue hover:text-blue-900">Edit</a>
-
                             {% if grade.final_rating < 75 %} <a href="{% url 'grade_remedial' grade.pk %}"
                                 class="text-green-600 hover:text-green-800 font-bold">Remedial</a>
                                 {% endif %}
-
                                 <form id="delete-grade-{{ grade.pk }}" action="{% url 'grade_delete' grade.pk %}"
                                     method="post" class="inline">
                                     {% csrf_token %}
                                     <button type="button" onclick="confirmDelete('delete-grade-{{ grade.pk }}')"
                                         class="text-red-600 hover:text-red-900">Delete</button>
                                 </form>
+                                {% else %}
+                                <span class="text-gray-400 italic text-xs">Locked</span>
+                                {% endif %}
                         </td>
                     </tr>
                     {% empty %}
