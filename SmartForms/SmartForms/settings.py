@@ -92,24 +92,24 @@ DATABASES = {
    # }
 
     #Render Deployment
-     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'smartforms_depedsf',
-        'USER': 'smartforms_depedsf_user',
-        'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',
-        'HOST': 'dpg-d56l343uibrs739m9ta0-a',
-        'PORT': '5432',
-    }
+     #'default': {
+     # #  'ENGINE': 'django.db.backends.postgresql',
+     #   'NAME': 'smartforms_depedsf',
+      #  'USER': 'smartforms_depedsf_user',
+      #  'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',
+    #    'HOST': 'dpg-d56l343uibrs739m9ta0-a',
+    #    'PORT': '5432',
+   # }
 
      # Using Render's DATABASE_URL environment variable
-    #'default':{
-    #   'ENGINE': 'django.db.backends.postgresql',
-    #    'NAME': 'smartforms_depedsf',  # database name
-    #    'USER': 'smartforms_depedsf_user',  # username
-    #    'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',  # password
-    #    'HOST': 'dpg-d56l343uibrs739m9ta0-a.virginia-postgres.render.com',  # host
-    #    'PORT': '5432',  # default PostgreSQL port
-    #}
+    'default':{
+       'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'smartforms_depedsf',  # database name
+        'USER': 'smartforms_depedsf_user',  # username
+        'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',  # password
+        'HOST': 'dpg-d56l343uibrs739m9ta0-a.virginia-postgres.render.com',  # host
+        'PORT': '5432',  # default PostgreSQL port
+    }
 }
 
 
