@@ -9,31 +9,49 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const gradeSelect = document.querySelector('select[name="grade_level"]');
         const sectionSelect = document.querySelector('select[name="section"]');
         const adviserSelect = document.querySelector('select[name="adviser_teacher"]');
 
-        if (sectionSelect && adviserSelect) {
-            // Function to fetch and update adviser
-            const updateAdviser = () => {
-                const sectionId = sectionSelect.value;
-                if (sectionId) {
-                    fetch(`/api/get-adviser/?section_id=${sectionId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.adviser_id) {
-                                adviserSelect.value = data.adviser_id;
-                            }
-                        })
-                        .catch(error => console.error('Error fetching adviser:', error));
-                }
-            };
+        function updateOptions() {
+            const gradeLevel = gradeSelect.value;
+            if (!gradeLevel) return;
 
-            // Update on change
-            sectionSelect.addEventListener('change', updateAdviser);
+            // Fetch compatible sections and advisers
+            fetch(`/api/section-adviser-data/?grade_level=${gradeLevel}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update Sections
+                    const currentSection = sectionSelect.value;
+                    sectionSelect.innerHTML = '<option value="">---------</option>';
+                    data.sections.forEach(section => {
+                        const option = new Option(section.name, section.id);
+                        if (section.id == currentSection) option.selected = true;
+                        sectionSelect.add(option);
+                    });
 
-            // Initial check if section is already selected (e.g. on page load)
-            if (sectionSelect.value) {
-                updateAdviser();
+                    // Update Advisers
+                    const currentAdviser = adviserSelect.value;
+                    adviserSelect.innerHTML = '<option value="">---------</option>';
+                    data.advisers.forEach(adviser => {
+                        const option = new Option(adviser.name, adviser.id);
+                        if (adviser.id == currentAdviser) option.selected = true;
+                        adviserSelect.add(option);
+                    });
+                })
+                .catch(err => console.error('Error fetching form data:', err));
+        }
+
+        if (gradeSelect) {
+            gradeSelect.addEventListener('change', updateOptions);
+            // If creating new record (no initial value) trigger update? 
+            // Better to trigger only if there is a value to ensure correct filtering on load/edit
+            if (gradeSelect.value) {
+                // Determine if we should trigger immediately. 
+                // On edit page, we might want to preserve initial selections if API fails?
+                // But if we don't trigger, the dropdowns contain ALL options.
+                // Triggering updates the list to valid filtered options.
+                updateOptions();
             }
         }
     });

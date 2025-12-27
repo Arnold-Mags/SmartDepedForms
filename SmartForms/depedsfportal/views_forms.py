@@ -1,6 +1,6 @@
 from django.views.generic import CreateView, UpdateView, ListView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import (
@@ -216,8 +216,18 @@ class AcademicRecordDetailView(LoginRequiredMixin, GradingAccessMixin, DetailVie
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get grades for this record
-        context["grades"] = SubjectGrade.objects.filter(academic_record=self.object)
+        # Get grades for the current view
+        context["grades"] = SubjectGrade.objects.filter(
+            academic_record=self.object
+        ).select_related("learning_area")
+
+        # Get ALL records for this student for the Transcript View
+        # Stacked from newest to oldest
+        context["all_records"] = (
+            AcademicRecord.objects.filter(student=self.object.student)
+            .order_by("-school_year", "-grade_level")
+            .prefetch_related("subject_grades", "subject_grades__learning_area")
+        )
         return context
 
 
@@ -409,7 +419,7 @@ class SubjectGradeRemedialUpdateView(
         return super().form_valid(form)
 
 
-#class AcademicRecordUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
+# class AcademicRecordUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
 #    model = AcademicRecord
 #    form_class = AcademicRecordForm
 #    template_name = "academic_record_form.html"
@@ -454,17 +464,18 @@ class AcademicYearUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateVie
     def form_valid(self, form):
         messages.success(self.request, "Academic year updated successfully.")
         return super().form_valid(form)
-    
+
+
 class AcademicRecordUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView):
     model = AcademicRecord
     form_class = AcademicRecordForm
-    template_name = 'academic_record_form.html'
-    
+    template_name = "academic_record_form.html"
+
     def form_valid(self, form):
         messages.success(self.request, "Academic record updated successfully.")
         return super().form_valid(form)
-    
-    #def get_success_url(self):
+
+    # def get_success_url(self):
     #    return reverse_lazy('record_detail', kwargs={'pk': self.object.pk})
     def get_success_url(self):
         return reverse_lazy("teacher_dashboard")

@@ -10,9 +10,22 @@
             <h1 class="text-3xl font-bold text-gray-900">Principal Dashboard</h1>
             <p class="text-gray-600">Overview of school academic performance.</p>
         </div>
-        <div class="flex items-center">
+        <div class="flex items-center space-x-2">
+            <!-- Academic Year Filter -->
+            <form method="get" class="flex items-center" id="academicYearFilterForm">
+                <select name="school_year" onchange="this.form.submit()"
+                    class="block text-sm border-gray-300 rounded-md focus:ring-deped-blue focus:border-deped-blue shadow-sm">
+                    <option value="">Current School Year</option>
+                    {% for year in academic_years %}
+                    <option value="{{ year.year_label }}" {% if selected_year == year.year_label %}selected{% endif %}>
+                        {{ year.year_label }}{% if year.is_current %} (Current){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+
             <a href="{% url 'report_dashboard' %}"
-                class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm mr-2">
+                class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -21,7 +34,7 @@
                 Reports
             </a>
             <a href="{% url 'analytics_dashboard' %}"
-                class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm mr-2">
+                class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium inline-flex items-center shadow-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
@@ -33,7 +46,7 @@
                 class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                     </path>
                 </svg>
                 Manage School Profile
@@ -124,74 +137,119 @@
             </div>
             {% endfor %}
         </div>
+        <!-- Promoted Students by Section -->
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Promoted Students by Section</h2>
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Grade Level
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Section
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Promoted Count
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for stat in promoted_stats %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                Grade {{ stat.grade_level }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ stat.section__name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
+                                {{ stat.count }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3"
+                                class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 italic">
+                                No students promoted in this academic year yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Enrollment Chart
-        const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
-        const enrollmentData = {{ enrollment_by_grade| safe }};
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Enrollment Chart
+            const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
+            const enrollmentData = {{ enrollment_by_grade| safe }};
 
-    // Map simplified grade levels to labels
-    const gradeLabels = enrollmentData.map(item => 'Grade ' + item.grade_level); // Direct mapping
-    const gradeCounts = enrollmentData.map(item => item.count);
+        // Map simplified grade levels to labels
+        const gradeLabels = enrollmentData.map(item => 'Grade ' + item.grade_level); // Direct mapping
+        const gradeCounts = enrollmentData.map(item => item.count);
 
-    new Chart(enrollmentCtx, {
-        type: 'bar',
-        data: {
-            labels: gradeLabels.length ? gradeLabels : ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'], // Fallback
-            datasets: [{
-                label: 'Students Enrolled',
-                data: gradeLabels.length ? gradeCounts : [0, 0, 0, 0],
-                backgroundColor: '#003366',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
+        new Chart(enrollmentCtx, {
+            type: 'bar',
+            data: {
+                labels: gradeLabels.length ? gradeLabels : ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'], // Fallback
+                datasets: [{
+                    label: 'Students Enrolled',
+                    data: gradeLabels.length ? gradeCounts : [0, 0, 0, 0],
+                    backgroundColor: '#003366',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 
-    // Performance Chart
-    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-    const performanceData = {{ chart_performance_data| safe }}; // [Passed, Failed, Remedial]
+        // Performance Chart
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        const performanceData = {{ chart_performance_data| safe }}; // [Passed, Failed, Remedial]
 
-    new Chart(performanceCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Passed', 'Failed/Retained', 'Needs Remedial'],
-            datasets: [{
-                data: performanceData,
-                backgroundColor: [
-                    '#10B981', // Green for Passed
-                    '#EF4444', // Red for Failed
-                    '#F59E0B'  // Yellow for Remedial
-                ],
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        new Chart(performanceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Passed', 'Failed/Retained', 'Needs Remedial'],
+                datasets: [{
+                    data: performanceData,
+                    backgroundColor: [
+                        '#10B981', // Green for Passed
+                        '#EF4444', // Red for Failed
+                        '#F59E0B'  // Yellow for Remedial
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
-        }
-    });
+        });
 });
-</script>
+    </script>
 </div>
 {% endblock %}

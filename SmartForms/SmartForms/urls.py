@@ -24,6 +24,7 @@ from depedsfportal.views_dashboard import (
     PrincipalDashboardView,
     dashboard_stats_api,
     get_adviser_api,
+    get_section_adviser_data_api,
 )
 from depedsfportal.views_forms import (
     SchoolUpdateView,
@@ -87,6 +88,11 @@ urlpatterns = [
     # API endpoints
     path("api/dashboard-stats/", dashboard_stats_api, name="dashboard_stats_api"),
     path("api/get-adviser/", get_adviser_api, name="get_adviser_api"),
+    path(
+        "api/section-adviser-data/",
+        get_section_adviser_data_api,
+        name="section_adviser_data_api",
+    ),
     # Forms - Principal
     path("school/settings/", SchoolUpdateView.as_view(), name="school_settings"),
     # Forms - Teacher
@@ -178,7 +184,9 @@ urlpatterns = [
         AcademicYearUpdateView.as_view(),
         name="academic_year_edit",
     ),
-    path('record/<int:pk>/edit/', AcademicRecordUpdateView.as_view(), name='record_edit'),
+    path(
+        "record/<int:pk>/edit/", AcademicRecordUpdateView.as_view(), name="record_edit"
+    ),
 ]
 
 from django.conf import settings

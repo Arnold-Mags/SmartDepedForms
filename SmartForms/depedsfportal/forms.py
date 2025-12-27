@@ -58,6 +58,21 @@ class AcademicRecordForm(TailwindFormMixin, forms.ModelForm):
         self.fields["adviser_teacher"].queryset = User.objects.filter(
             groups__name="Teacher"
         )
+
+        # Custom label for adviser to show Grade and Section
+        def adviser_label(obj):
+            try:
+                if hasattr(obj, "teacher_profile"):
+                    profile = obj.teacher_profile
+                    section_name = (
+                        profile.section.name if profile.section else "No Section"
+                    )
+                    return f"{obj.last_name}, {obj.first_name} - Grade {profile.grade_level} - {section_name}"
+            except Exception:
+                pass
+            return f"{obj.last_name}, {obj.first_name}"
+
+        self.fields["adviser_teacher"].label_from_instance = adviser_label
         self.fields["adviser_teacher"].label = "Adviser Teacher"
 
         # Populate school_year dropdown with AcademicYear objects

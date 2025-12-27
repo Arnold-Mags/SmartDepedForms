@@ -248,7 +248,11 @@ class AcademicRecord(models.Model):
     )
     grade_level = models.IntegerField(choices=GRADE_CHOICES)
     section = models.ForeignKey(
-        Section, on_delete=models.PROTECT, related_name="academic_records"
+        Section,
+        on_delete=models.PROTECT,
+        related_name="academic_records",
+        null=True,
+        blank=True,
     )
     school_year = models.CharField(max_length=9, help_text="Format: 2024-2025")
     adviser_teacher = models.ForeignKey(
@@ -372,11 +376,19 @@ class AcademicRecord(models.Model):
 
         next_grade = self.grade_level + 1
 
+        # Calculate next school year
+        try:
+            start_year, end_year = map(int, self.school_year.split("-"))
+            next_school_year = f"{start_year + 1}-{end_year + 1}"
+        except ValueError:
+            # Fallback if format is invalid, keep current (user can edit)
+            next_school_year = self.school_year
+
         # Check if record already exists
         existing = AcademicRecord.objects.filter(
             student=self.student,
             grade_level=next_grade,
-            school_year=self.school_year,  # Use same SY as default or let user change
+            school_year=next_school_year,
         ).first()
 
         if existing:
@@ -387,7 +399,7 @@ class AcademicRecord(models.Model):
             school=self.school,
             grade_level=next_grade,
             section=None,  # Reset section for new grade level - Registrar will assign
-            school_year=self.school_year,
+            school_year=next_school_year,
             adviser_teacher=None,  # Clear adviser for new grade
         )
 
@@ -624,10 +636,23 @@ def update_academic_record_on_grade_change(sender, instance, **kwargs):
 @receiver(post_save, sender=AcademicRecord)
 def update_student_status_on_academic_change(sender, instance, created, **kwargs):
     """
-    Update student status based on academic records:
-    - ENROLLED when first record created (if PENDING)
-    - GRADUATED if Grade 10 is completed with PROMOTED remark
+    Update student status based on academic records.
+    Also auto-populate subjects when a new record is created.
     """
+    # 1. Auto-Populate Subjects for New Records
+    if created:
+        # Get subjects for this grade level
+        subjects = LearningArea.get_subjects_for_grade(instance.grade_level)
+
+        # Create Grade entries
+        SubjectGrade.objects.bulk_create(
+            [
+                SubjectGrade(academic_record=instance, learning_area=subject)
+                for subject in subjects
+            ]
+        )
+
+    # 2. Update Student Status Logic (Existing)
     student = instance.student
 
     # Handle Initial Enrollment
