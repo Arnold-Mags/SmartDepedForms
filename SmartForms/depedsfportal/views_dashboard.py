@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
 from django.db.models import Count, Avg, Q
 from django.http import JsonResponse
-from .models import Student, AcademicRecord, SubjectGrade, LearningArea
+from .models import Student, AcademicRecord, SubjectGrade, LearningArea, AcademicYear
 
 
 class DashboardRedirectView(LoginRequiredMixin, RedirectView):
@@ -42,35 +42,57 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         user = self.request.user
         qs = Student.objects.all()
 
-        # Registrar and Superuser see all students
+        # Get selected school year from request or default to current
+        selected_year = self.request.GET.get("school_year")
+
+        # If no specific year selected, default to current
+        if not selected_year:
+            current_year = AcademicYear.get_current_year()
+            selected_year = current_year.year_label if current_year else None
+
+        # Apply Academic Year Filter Globally if a year is selected/active
+        if selected_year:
+            qs = qs.filter(academic_records__school_year=selected_year).distinct()
+
+        # Registrar and Superuser see all students (filtered by year)
         if user.is_superuser or user.groups.filter(name="Registrar").exists():
             return qs.order_by("last_name", "first_name")
 
         # Teachers only see students in their advisory
         try:
             profile = user.teacher_profile
-            # Filter students who have an academic record in the teacher's grade and section
-            # Exclude students who have been promoted (have a PROMOTED record in this grade/section
-            # AND have a record in a higher grade level)
+
+            # Base filter for teacher's section
             students_in_section = qs.filter(
                 academic_records__grade_level=profile.grade_level,
                 academic_records__section=profile.section,
             )
 
-            # Get students who have been promoted from this grade to a higher grade
-            promoted_students = Student.objects.filter(
-                academic_records__grade_level=profile.grade_level,
-                academic_records__section=profile.section,
-                academic_records__remarks="PROMOTED",
-            ).filter(academic_records__grade_level__gt=profile.grade_level)
+            # Note: The 'qs' is already filtered by academic year above if selected_year is present.
+            # So students_in_section is effectively:
+            # Students with a record in (Year X) AND (Grade/Section Y)
 
-            return (
-                students_in_section.exclude(
+            # Promotion Logic:
+            # If viewing CURRENT year, hide students who have been promoted OUT.
+            # If viewing PAST year, show all students who were in that section that year.
+
+            current_year_obj = AcademicYear.get_current_year()
+            is_viewing_current = not selected_year or (
+                current_year_obj and selected_year == current_year_obj.year_label
+            )
+
+            if is_viewing_current:
+                promoted_students = Student.objects.filter(
+                    academic_records__grade_level=profile.grade_level,
+                    academic_records__section=profile.section,
+                    academic_records__remarks="PROMOTED",
+                ).filter(academic_records__grade_level__gt=profile.grade_level)
+
+                students_in_section = students_in_section.exclude(
                     pk__in=promoted_students.values_list("pk", flat=True)
                 )
-                .distinct()
-                .order_by("last_name", "first_name")
-            )
+
+            return students_in_section.distinct().order_by("last_name", "first_name")
         except Exception:
             # If no profile, they see no students (or maybe we show an error)
             return Student.objects.none()
@@ -81,6 +103,16 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         # Get all students for the table
         students = self.get_queryset()
         context["students"] = students
+
+        # Add academic years to context
+        context["academic_years"] = AcademicYear.objects.all().order_by("-start_date")
+
+        # Add selected year
+        current_year = AcademicYear.get_current_year()
+        selected_year = self.request.GET.get("school_year")
+        if not selected_year and current_year:
+            selected_year = current_year.year_label
+        context["selected_year"] = selected_year
 
         # Calculate counts for each status
         enrolled_count = students.filter(status="ENROLLED").count()

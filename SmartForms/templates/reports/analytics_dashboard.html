@@ -16,8 +16,13 @@
         <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
                 <label for="year" class="block text-sm font-medium text-gray-700">School Year</label>
-                <input type="text" name="year" id="year" value="{{ current_filters.year }}" placeholder="2024-2025"
+                <select name="year" id="year"
                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-deped-blue focus:border-deped-blue sm:text-sm">
+                    <option value="">All Years</option>
+                    {% for year in academic_years %}
+                    <option value="{{ year.year_label }}" {% if current_filters.year == year.year_label %}selected{% endif%}>{{ year.year_label }}{% if year.is_current %} (Current){% endif %}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div>
                 <label for="grade" class="block text-sm font-medium text-gray-700">Grade Level</label>

@@ -60,6 +60,17 @@ class AcademicRecordForm(TailwindFormMixin, forms.ModelForm):
         )
         self.fields["adviser_teacher"].label = "Adviser Teacher"
 
+        # Populate school_year dropdown with AcademicYear objects
+        academic_years = AcademicYear.objects.all().order_by("-start_date")
+        year_choices = [(year.year_label, year.year_label) for year in academic_years]
+
+        # If no academic years exist, provide a fallback or allow free text (optional, but better to force config)
+        if not year_choices:
+            # Fallback for when no academic years are configured yet
+            pass
+        else:
+            self.fields["school_year"].widget = forms.Select(choices=year_choices)
+
         # Pre-fill school_year with current academic year if creating new record
         if not self.instance.pk:
             current_year = AcademicYear.get_current_year()

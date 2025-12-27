@@ -178,6 +178,7 @@ urlpatterns = [
         AcademicYearUpdateView.as_view(),
         name="academic_year_edit",
     ),
+    path('record/<int:pk>/edit/', AcademicRecordUpdateView.as_view(), name='record_edit'),
 ]
 
 from django.conf import settings

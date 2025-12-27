@@ -409,17 +409,17 @@ class SubjectGradeRemedialUpdateView(
         return super().form_valid(form)
 
 
-class AcademicRecordUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
-    model = AcademicRecord
-    form_class = AcademicRecordForm
-    template_name = "academic_record_form.html"
+#class AcademicRecordUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
+#    model = AcademicRecord
+#    form_class = AcademicRecordForm
+#    template_name = "academic_record_form.html"
 
-    def get_success_url(self):
-        return reverse_lazy("teacher_dashboard")
+#    def get_success_url(self):
+#        return reverse_lazy("teacher_dashboard")
 
-    def form_valid(self, form):
-        messages.success(self.request, "Academic record updated successfully.")
-        return super().form_valid(form)
+#    def form_valid(self, form):
+#        messages.success(self.request, "Academic record updated successfully.")
+#        return super().form_valid(form)
 
 
 # --- Academic Year Management (Registrar Only) ---
@@ -454,3 +454,17 @@ class AcademicYearUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateVie
     def form_valid(self, form):
         messages.success(self.request, "Academic year updated successfully.")
         return super().form_valid(form)
+    
+class AcademicRecordUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView):
+    model = AcademicRecord
+    form_class = AcademicRecordForm
+    template_name = 'academic_record_form.html'
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Academic record updated successfully.")
+        return super().form_valid(form)
+    
+    #def get_success_url(self):
+    #    return reverse_lazy('record_detail', kwargs={'pk': self.object.pk})
+    def get_success_url(self):
+        return reverse_lazy("teacher_dashboard")
