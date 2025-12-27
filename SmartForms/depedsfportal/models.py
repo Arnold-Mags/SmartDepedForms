@@ -110,6 +110,43 @@ class School(models.Model):
         return f"{self.name} ({self.school_id})"
 
 
+class AcademicYear(models.Model):
+    """Academic/School Year configuration"""
+
+    year_label = models.CharField(
+        max_length=9, unique=True, help_text="Format: 2024-2025"
+    )
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_current = models.BooleanField(
+        default=False, help_text="Mark this as the current active academic year"
+    )
+
+    class Meta:
+        ordering = ["-start_date"]
+        verbose_name = "Academic Year"
+        verbose_name_plural = "Academic Years"
+
+    def __str__(self):
+        current_marker = " (Current)" if self.is_current else ""
+        return f"{self.year_label}{current_marker}"
+
+    @classmethod
+    def get_current_year(cls):
+        """Get the current active academic year"""
+        current = cls.objects.filter(is_current=True).first()
+        if not current:
+            # Fallback to most recent year
+            current = cls.objects.first()
+        return current
+
+    def save(self, *args, **kwargs):
+        # Ensure only one year is marked as current
+        if self.is_current:
+            AcademicYear.objects.filter(is_current=True).update(is_current=False)
+        super().save(*args, **kwargs)
+
+
 class Section(models.Model):
     """Grade level sections managed by Registrar"""
 
@@ -122,6 +159,12 @@ class Section(models.Model):
 
     grade_level = models.IntegerField(choices=GRADE_CHOICES)
     name = models.CharField(max_length=50)
+    max_students = models.IntegerField(
+        default=45,
+        null=True,
+        blank=True,
+        help_text="Maximum number of students allowed in this section",
+    )
 
     class Meta:
         ordering = ["grade_level", "name"]
@@ -131,6 +174,34 @@ class Section(models.Model):
 
     def __str__(self):
         return f"Grade {self.grade_level} - {self.name}"
+
+    def get_current_enrollment_count(self):
+        """Get the current number of students enrolled in this section"""
+        return (
+            AcademicRecord.objects.filter(section=self, grade_level=self.grade_level)
+            .exclude(remarks="PROMOTED")
+            .values("student")
+            .distinct()
+            .count()
+        )
+
+    def get_available_slots(self):
+        """Get the number of available slots remaining"""
+        if self.max_students is None:
+            return None  # Unlimited
+        return max(0, self.max_students - self.get_current_enrollment_count())
+
+    def is_full(self):
+        """Check if the section is at capacity"""
+        if self.max_students is None:
+            return False  # Unlimited capacity
+        return self.get_current_enrollment_count() >= self.max_students
+
+    def is_near_capacity(self, threshold=0.9):
+        """Check if section is near capacity (default 90%)"""
+        if self.max_students is None:
+            return False
+        return self.get_current_enrollment_count() >= (self.max_students * threshold)
 
 
 class TeacherProfile(models.Model):
@@ -315,7 +386,7 @@ class AcademicRecord(models.Model):
             student=self.student,
             school=self.school,
             grade_level=next_grade,
-            section=self.section,  # Copy current section as starting point
+            section=None,  # Reset section for new grade level - Registrar will assign
             school_year=self.school_year,
             adviser_teacher=None,  # Clear adviser for new grade
         )

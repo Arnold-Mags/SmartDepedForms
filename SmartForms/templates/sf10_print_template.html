@@ -214,7 +214,7 @@
 <body>
     <!-- PAGE 1: FRONT -->
     <div class="page">
-        <div class="watermark">SF10-ES</div>
+        <div class="watermark">SF10-JHS</div>
 
         <div class="header">
             <table style="width: 100%; border: none; margin-bottom: 0;">
@@ -231,8 +231,8 @@
                     </td>
                 </tr>
             </table>
-            <h1 style="margin-top: 5px;">Learner Permanent Academic Record for Elementary School (SF10-ES)</h1>
-            <div class="form-code">(Formerly Form 137) | Revised 2025 based on DepEd Order No. 10, s. 2024</div>
+            <h1 style="margin-top: 5px;">Learner Permanent Academic Record for Junior High School (SF10-JHS)</h1>
+            <div class="form-code">(Formerly Form 138) | Revised 2025 based on DepEd Order No. 10, s. 2024</div>
         </div>
 
         <!-- LEARNER'S PERSONAL INFORMATION -->
@@ -270,22 +270,22 @@
             </div>
         </div>
 
-        <!-- ELIGIBILITY FOR ELEMENTARY SCHOOL ENROLLMENT -->
+        <!-- ELIGIBILITY FOR JUNIOR HIGH SCHOOL ENROLLMENT -->
         <div class="section">
-            <div class="section-title">ELIGIBILITY FOR ELEMENTARY SCHOOL ENROLLMENT</div>
+            <div class="section-title">ELIGIBILITY FOR JUNIOR HIGH SCHOOL ENROLLMENT</div>
             <div style="font-size: 8pt; margin-bottom: 5px;">
-                <strong>Credential Presented for Grade 1:</strong>
+                <strong>Credential Presented for Grade 7:</strong>
             </div>
             <div style="font-size: 8pt; line-height: 1.5;">
                 <span
                     class="checkbox {% if student.credential_presented == 'KINDER_PROGRESS' %}checked{% endif %}"></span>
-                Kinder Progress Report &nbsp;
+                Elementary School Report Card (Form 138-E) &nbsp;
                 <span
                     class="checkbox {% if student.credential_presented == 'ECCD_CHECKLIST' %}checked{% endif %}"></span>
-                ECCD Checklist &nbsp;
+                Certificate of Completion (Elementary) &nbsp;
                 <span
                     class="checkbox {% if student.credential_presented == 'KINDER_CERTIFICATE' %}checked{% endif %}"></span>
-                Kindergarten Certificate of Completion
+                Transfer Credentials
             </div>
             {% if student.credential_presented == 'PEPT' %}
             <div style="margin-top: 5px; font-size: 8pt;">
@@ -420,9 +420,9 @@
     {% if forloop.first %}
     {% if page|length > 2 %}
     <div class="page">
-        <div class="watermark">SF10-ES Page {{ forloop.counter|add:"1" }}</div>
+        <div class="watermark">SF10-JHS Page {{ forloop.counter|add:"1" }}</div>
         <div class="header">
-            <div class="form-code">SF10-ES | Page 2 of ____ | Continued</div>
+            <div class="form-code">SF10-JHS | Page 2 of ____ | Continued</div>
         </div>
 
         {% for record in page|slice:"2:" %}
@@ -543,9 +543,9 @@
     {% else %}
     <!-- Additional pages for more records -->
     <div class="page">
-        <div class="watermark">SF10-ES Page {{ forloop.counter|add:"1" }}</div>
+        <div class="watermark">SF10-JHS Page {{ forloop.counter|add:"1" }}</div>
         <div class="header">
-            <div class="form-code">SF10-ES | Page {{ forloop.counter|add:"1" }} | Continued</div>
+            <div class="form-code">SF10-JHS | Page {{ forloop.counter|add:"1" }} | Continued</div>
         </div>
 
         {% for record in page %}

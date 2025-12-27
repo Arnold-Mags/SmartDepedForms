@@ -407,3 +407,50 @@ class SubjectGradeRemedialUpdateView(
         # The model's save() handles final rating recomputation via clean()
         messages.success(self.request, "Remedial information updated.")
         return super().form_valid(form)
+
+
+class AcademicRecordUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
+    model = AcademicRecord
+    form_class = AcademicRecordForm
+    template_name = "academic_record_form.html"
+
+    def get_success_url(self):
+        return reverse_lazy("teacher_dashboard")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Academic record updated successfully.")
+        return super().form_valid(form)
+
+
+# --- Academic Year Management (Registrar Only) ---
+
+from .forms import AcademicYearForm
+from .models import AcademicYear
+
+
+class AcademicYearListView(LoginRequiredMixin, RegistrarAccessMixin, ListView):
+    model = AcademicYear
+    template_name = "academic_year_list.html"
+    context_object_name = "academic_years"
+
+
+class AcademicYearCreateView(LoginRequiredMixin, RegistrarAccessMixin, CreateView):
+    model = AcademicYear
+    form_class = AcademicYearForm
+    template_name = "academic_year_form.html"
+    success_url = reverse_lazy("academic_year_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Academic year created successfully.")
+        return super().form_valid(form)
+
+
+class AcademicYearUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
+    model = AcademicYear
+    form_class = AcademicYearForm
+    template_name = "academic_year_form.html"
+    success_url = reverse_lazy("academic_year_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Academic year updated successfully.")
+        return super().form_valid(form)

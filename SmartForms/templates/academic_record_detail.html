@@ -25,9 +25,11 @@
             </a>
 
             <div class="flex space-x-2">
-                <form action="{% url 'record_promote' record.pk %}" method="post" class="inline">
+                <form id="promote-form-{{ record.pk }}" action="{% url 'record_promote' record.pk %}" method="post"
+                    class="inline">
                     {% csrf_token %}
-                    <button type="submit"
+                    <button type="button"
+                        onclick="confirmAction('promote-form-{{ record.pk }}', 'Promote Student?', 'This will move the student to the next grade level and unassign their current section.', 'question', 'Yes, Promote Student')"
                         class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md font-medium text-xs shadow-sm flex items-center transition">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -37,9 +39,11 @@
                     </button>
                 </form>
 
-                <form action="{% url 'record_retain' record.pk %}" method="post" class="inline">
+                <form id="retain-form-{{ record.pk }}" action="{% url 'record_retain' record.pk %}" method="post"
+                    class="inline">
                     {% csrf_token %}
-                    <button type="submit"
+                    <button type="button"
+                        onclick="confirmAction('retain-form-{{ record.pk }}', 'Retain Student?', 'This will mark the student as RETAINED for this grade level.', 'warning', 'Yes, Retain Student')"
                         class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-md font-medium text-xs shadow-sm flex items-center transition">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -27,6 +27,8 @@
                             Level</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Section Name</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Enrollment / Capacity</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Actions</th>
                     </tr>
@@ -37,6 +39,27 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Grade {{ section.grade_level }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ section.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                            {% with enrollment=section.get_current_enrollment_count %}
+                            <span
+                                class="{% if section.is_full %}text-red-600 font-bold{% elif section.is_near_capacity %}text-orange-600 font-semibold{% else %}text-gray-700{% endif %}">
+                                {{ enrollment }}
+                            </span>
+                            <span class="text-gray-400">/</span>
+                            <span class="text-gray-600">{{ section.max_students|default:"∞" }}</span>
+                            {% if section.is_full %}
+                            <span
+                                class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                Full
+                            </span>
+                            {% elif section.is_near_capacity %}
+                            <span
+                                class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                Near Capacity
+                            </span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                             <a href="{% url 'section_edit' section.pk %}"
                                 class="text-deped-blue hover:text-blue-900">Edit</a>

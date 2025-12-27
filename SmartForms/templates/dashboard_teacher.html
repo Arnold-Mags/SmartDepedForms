@@ -147,10 +147,24 @@
                             <!-- Helper to show latest record or button to add -->
                             {% with latest_record=student.academic_records.last %}
                             {% if latest_record %}
-                            Grade {{ latest_record.grade_level }}
+                            {% if perms.depedsfportal.add_section or user.is_superuser %}
+                            <!-- Registrar: Clickable to edit enrollment -->
+                            <a href="{% url 'record_edit' latest_record.pk %}"
+                                class="text-deped-blue hover:text-blue-900 underline font-medium"
+                                title="Click to manage enrollment">
+                                Grade {{ latest_record.grade_level }}
+                            </a>
                             {% else %}
+                            <!-- Teacher: Read-only -->
+                            Grade {{ latest_record.grade_level }}
+                            {% endif %}
+                            {% else %}
+                            {% if perms.depedsfportal.add_section or user.is_superuser %}
                             <a href="{% url 'record_add' student.pk %}" class="text-xs text-deped-blue underline">Enroll
                                 in Grade</a>
+                            {% else %}
+                            <span class="text-gray-400 text-xs">Not Enrolled</span>
+                            {% endif %}
                             {% endif %}
                             {% endwith %}
                         </td>

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Academic Year - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div>
+        <a href="{% url 'academic_year_list' %}" class="text-deped-blue hover:underline">← Back to Academic Years</a>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">
+            {% if form.instance.pk %}Edit{% else %}Add New{% endif %} Academic Year
+        </h1>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="{{ form.year_label.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    School Year
+                </label>
+                {{ form.year_label }}
+                {% if form.year_label.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.year_label.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-gray-500">Format: 2024-2025</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.start_date.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date
+                    </label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.start_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        End Date
+                    </label>
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.end_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex items-center">
+                {{ form.is_current }}
+                <label for="{{ form.is_current.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700">
+                    Set as Current Academic Year
+                </label>
+                {% if form.is_current.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.is_current.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <p class="text-xs text-gray-500 ml-6">Only one academic year can be marked as current at a time.</p>
+
+            <div class="flex justify-end space-x-3 pt-4">
+                <a href="{% url 'academic_year_list' %}"
+                    class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium transition duration-150">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium transition duration-150">
+                    {% if form.instance.pk %}Update{% else %}Create{% endif %} Academic Year
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -16,13 +16,13 @@ except ImportError:
 class TeacherAccessMixin(UserPassesTestMixin):
     def test_func(self):
         return (
-            self.request.user.groups.filter(name="Teacher").exists()
+            self.request.user.groups.filter(name__in=["Teacher", "Registrar"]).exists()
             or self.request.user.is_superuser
         )
 
 
 class SF10PrintView(LoginRequiredMixin, TeacherAccessMixin, View):
-    """Generate SF10 PDF for a specific student"""
+    """Generate SF10-JHS PDF for a specific student"""
 
     def get(self, request, lrn):
         student = get_object_or_404(Student, lrn=lrn)

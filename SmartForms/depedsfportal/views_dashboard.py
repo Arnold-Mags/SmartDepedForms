@@ -50,11 +50,23 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         try:
             profile = user.teacher_profile
             # Filter students who have an academic record in the teacher's grade and section
-            # We assume the current or latest academic record
+            # Exclude students who have been promoted (have a PROMOTED record in this grade/section
+            # AND have a record in a higher grade level)
+            students_in_section = qs.filter(
+                academic_records__grade_level=profile.grade_level,
+                academic_records__section=profile.section,
+            )
+
+            # Get students who have been promoted from this grade to a higher grade
+            promoted_students = Student.objects.filter(
+                academic_records__grade_level=profile.grade_level,
+                academic_records__section=profile.section,
+                academic_records__remarks="PROMOTED",
+            ).filter(academic_records__grade_level__gt=profile.grade_level)
+
             return (
-                qs.filter(
-                    academic_records__grade_level=profile.grade_level,
-                    academic_records__section=profile.section,
+                students_in_section.exclude(
+                    pk__in=promoted_students.values_list("pk", flat=True)
                 )
                 .distinct()
                 .order_by("last_name", "first_name")

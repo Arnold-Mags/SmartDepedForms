@@ -7,6 +7,7 @@ from .models import (
     LearningArea,
     Section,
     TeacherProfile,
+    AcademicYear,
 )
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
@@ -58,6 +59,12 @@ class AcademicRecordForm(TailwindFormMixin, forms.ModelForm):
             groups__name="Teacher"
         )
         self.fields["adviser_teacher"].label = "Adviser Teacher"
+
+        # Pre-fill school_year with current academic year if creating new record
+        if not self.instance.pk:
+            current_year = AcademicYear.get_current_year()
+            if current_year:
+                self.fields["school_year"].initial = current_year.year_label
 
 
 class SubjectGradeForm(TailwindFormMixin, forms.ModelForm):
@@ -112,4 +119,14 @@ class SubjectGradeRemedialForm(TailwindFormMixin, forms.ModelForm):
         widgets = {
             "remedial_conducted_from": forms.DateInput(attrs={"type": "date"}),
             "remedial_conducted_to": forms.DateInput(attrs={"type": "date"}),
+        }
+
+
+class AcademicYearForm(TailwindFormMixin, forms.ModelForm):
+    class Meta:
+        model = AcademicYear
+        fields = ["year_label", "start_date", "end_date", "is_current"]
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
         }

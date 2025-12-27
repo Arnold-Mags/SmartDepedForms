@@ -30,6 +30,7 @@ from depedsfportal.views_forms import (
     StudentCreateView,
     StudentUpdateView,
     AcademicRecordCreateView,
+    AcademicRecordUpdateView,
     LearningAreaListView,
     LearningAreaCreateView,
     LearningAreaUpdateView,
@@ -48,6 +49,9 @@ from depedsfportal.views_forms import (
     AcademicRecordPromoteView,
     AcademicRecordRetainView,
     SubjectGradeRemedialUpdateView,
+    AcademicYearListView,
+    AcademicYearCreateView,
+    AcademicYearUpdateView,
 )
 from depedsfportal.views_reports import (
     ReportDashboardView,
@@ -92,6 +96,11 @@ urlpatterns = [
         "student/<str:student_pk>/record/add/",
         AcademicRecordCreateView.as_view(),
         name="record_add",
+    ),
+    path(
+        "student/<str:student_pk>/record/<int:pk>/edit/",
+        AcademicRecordUpdateView.as_view(),
+        name="record_edit",
     ),
     path("record/<int:pk>/", AcademicRecordDetailView.as_view(), name="record_detail"),
     # Forms - Learning Areas
@@ -156,6 +165,18 @@ urlpatterns = [
         "grade/<int:pk>/remedial/",
         SubjectGradeRemedialUpdateView.as_view(),
         name="grade_remedial",
+    ),
+    # Academic Year Management
+    path("academic-years/", AcademicYearListView.as_view(), name="academic_year_list"),
+    path(
+        "academic-years/add/",
+        AcademicYearCreateView.as_view(),
+        name="academic_year_add",
+    ),
+    path(
+        "academic-years/<int:pk>/edit/",
+        AcademicYearUpdateView.as_view(),
+        name="academic_year_edit",
     ),
 ]
 
