@@ -174,7 +174,7 @@
                 {% if perms.depedsfportal.add_section or user.is_superuser %}
                 <a href="{% url 'section_list' %}"
                     class="text-gray-700 hover:text-deped-blue border-b-2 {% if 'sections' in request.path %}border-deped-blue text-deped-blue{% else %}border-transparent{% endif %} py-2 transition duration-150">
-                    Manage Sections
+                    Manage Sections and Class List
                 </a>
                 <a href="{% url 'learning_area_list' %}"
                     class="text-gray-700 hover:text-deped-blue border-b-2 {% if 'learning-areas' in request.path %}border-deped-blue text-deped-blue{% else %}border-transparent{% endif %} py-2 transition duration-150">

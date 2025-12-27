@@ -22,3 +22,4 @@ zopfli==0.4.0
 gunicorn
 dj-database-url
 whitenoise
+openpyxl==3.1.5

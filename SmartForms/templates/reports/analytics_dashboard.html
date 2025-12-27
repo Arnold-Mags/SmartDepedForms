@@ -2,32 +2,43 @@
 {% block title %}Analytics - DepEd SF10{% endblock %}
 
 {% block content %}
-<a href="{% url 'principal_dashboard' %}" class="text-deped-blue hover:underline">← Back to Dashboard</a><br><br>
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">School Analytics</h1>
-            <p class="text-gray-600">Demographic and academic insights.</p>
+            <a href="{% url 'principal_dashboard' %}"
+                class="inline-flex items-center text-sm font-medium text-deped-blue hover:text-blue-800 transition-colors mb-2">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Dashboard
+            </a>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">School Analytics</h1>
+            <p class="text-gray-500 mt-1">Detailed demographic and academic insights.</p>
         </div>
     </div>
 
     <!-- Filter Form -->
-    <div class="bg-white p-4 rounded-lg shadow space-y-4">
-        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-                <label for="year" class="block text-sm font-medium text-gray-700">School Year</label>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8 transition-all hover:shadow-md">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div class="space-y-1.5">
+                <label for="year" class="block text-xs font-bold text-gray-500 uppercase tracking-widest">School
+                    Year</label>
                 <select name="year" id="year"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-deped-blue focus:border-deped-blue sm:text-sm">
+                    class="block w-full border-gray-200 rounded-xl shadow-sm focus:ring-deped-blue focus:border-deped-blue transition-all">
                     <option value="">All Years</option>
                     {% for year in academic_years %}
-                    <option value="{{ year.year_label }}" {% if current_filters.year == year.year_label %}selected{% endif%}>{{ year.year_label }}{% if year.is_current %} (Current){% endif %}</option>
+                    <option value="{{ year.year_label }}" {% if current_filters.year == year.year_label %}selected{% endif %}>
+                        {{ year.year_label }}{% if year.is_current %} (Current){% endif %}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label for="grade" class="block text-sm font-medium text-gray-700">Grade Level</label>
+            <div class="space-y-1.5">
+                <label for="grade" class="block text-xs font-bold text-gray-500 uppercase tracking-widest">Grade
+                    Level</label>
                 <select name="grade" id="grade"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-deped-blue focus:border-deped-blue sm:text-sm">
+                    class="block w-full border-gray-200 rounded-xl shadow-sm focus:ring-deped-blue focus:border-deped-blue transition-all">
                     <option value="">All Levels</option>
                     <option value="7" {% if current_filters.grade == '7' %}selected{% endif %}>Grade 7</option>
                     <option value="8" {% if current_filters.grade == '8' %}selected{% endif %}>Grade 8</option>
@@ -35,10 +46,11 @@
                     <option value="10" {% if current_filters.grade == '10' %}selected{% endif %}>Grade 10</option>
                 </select>
             </div>
-            <div>
-                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+            <div class="space-y-1.5">
+                <label for="status" class="block text-xs font-bold text-gray-500 uppercase tracking-widest">Enrollment
+                    Status</label>
                 <select name="status" id="status"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-deped-blue focus:border-deped-blue sm:text-sm">
+                    class="block w-full border-gray-200 rounded-xl shadow-sm focus:ring-deped-blue focus:border-deped-blue transition-all">
                     <option value="">All Statuses</option>
                     <option value="ENROLLED" {% if current_filters.status == 'ENROLLED' %}selected{% endif %}>Enrolled
                     </option>
@@ -50,42 +62,109 @@
             </div>
             <div>
                 <button type="submit"
-                    class="w-full bg-deped-blue text-white px-4 py-2 rounded-md hover:bg-blue-800 transition">Update
-                    Analytics</button>
+                    class="w-full bg-deped-blue text-white font-bold py-2.5 rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-800 transition-all active:scale-95">
+                    Update Analytics
+                </button>
             </div>
         </form>
     </div>
 
-    <!-- Status Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {% for stat in by_status %}
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <dt class="text-sm font-medium text-gray-500 truncate">Total {{ stat.status }}</dt>
-                <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ stat.count }}</dd>
+    <!-- Status Overview & Gender Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+        <!-- Status Stats -->
+        <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for stat in by_status %}
+            <div
+                class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center transition-all hover:scale-[1.02] hover:shadow-md border-b-4 {% if stat.status == 'ENROLLED' %}border-green-500{% elif stat.status == 'DROPPED' %}border-red-500{% else %}border-blue-500{% endif %}">
+                <span
+                    class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 group-hover:text-gray-500 transition-colors">Total
+                    {{ stat.status }}</span>
+                <span class="text-4xl font-black text-gray-900">{{ stat.count }}</span>
+            </div>
+            {% empty %}
+            <div class="col-span-3 bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 text-center">
+                <p class="text-gray-400 font-medium italic">No status data available for selected filters</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Gender Doughnut -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Enrollment by Gender</h3>
+            <div class="w-full h-48">
+                <canvas id="genderChart"></canvas>
             </div>
         </div>
-        {% endfor %}
     </div>
 
-    <!-- Geographic Distribution -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- By City -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Enrollment by City/Municipality</h3>
-            <div class="overflow-y-auto max-h-64">
-                <table class="min-w-full">
+    <!-- Detailed Distribution Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Gender by Grade Level -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                <span class="p-2 bg-blue-50 text-blue-600 rounded-lg mr-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                </span>
+                Gender Distribution by Grade Level
+            </h3>
+            <div class="h-64">
+                <canvas id="genderGradeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Gender by Section -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                <span class="p-2 bg-purple-50 text-purple-600 rounded-lg mr-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </span>
+                Gender Distribution by Section
+            </h3>
+            <div class="h-64">
+                <canvas id="genderSectionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geographic Analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- By Barangay -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                <span class="p-2 bg-green-50 text-green-600 rounded-lg mr-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </span>
+                Enrollment by Barangay
+            </h3>
+            <div class="h-64 mb-6">
+                <canvas id="barangayChart"></canvas>
+            </div>
+            <div class="overflow-y-auto flex-grow rounded-xl border border-gray-100">
+                <table class="min-w-full divide-y divide-gray-100">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">City</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Count</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                Barangay</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                Learners</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for city in by_city %}
-                        <tr class="border-b">
-                            <td class="px-4 py-2">{{ city.city|default:"Unspecified" }}</td>
-                            <td class="px-4 py-2 text-right font-semibold">{{ city.count }}</td>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for brgy in by_barangay %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ brgy.barangay|default:"Unspecified" }}</td>
+                            <td class="px-4 py-3 text-right font-bold text-gray-900">{{ brgy.count }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -93,22 +172,35 @@
             </div>
         </div>
 
-        <!-- By Barangay -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Enrollment by Barangay</h3>
-            <div class="overflow-y-auto max-h-64">
-                <table class="min-w-full">
+        <!-- By City -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                <span class="p-2 bg-yellow-50 text-yellow-600 rounded-lg mr-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2 2 2 0 012 2v.1c0 1 .6 3 3.5 3m-9.9-17.7l1.7 1.7m13.6 0l-1.7 1.7" />
+                    </svg>
+                </span>
+                Enrollment by City/Municipality
+            </h3>
+            <div class="h-64 mb-6">
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="overflow-y-auto flex-grow rounded-xl border border-gray-100">
+                <table class="min-w-full divide-y divide-gray-100">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Barangay</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Count</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                City</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                Learners</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for brgy in by_barangay %}
-                        <tr class="border-b">
-                            <td class="px-4 py-2">{{ brgy.barangay|default:"Unspecified" }}</td>
-                            <td class="px-4 py-2 text-right font-semibold">{{ brgy.count }}</td>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for city in by_city %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ city.city|default:"Unspecified" }}</td>
+                            <td class="px-4 py-3 text-right font-bold text-gray-900">{{ city.count }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -117,4 +209,152 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Gender Distribution Chart
+        const genderCtx = document.getElementById('genderChart').getContext('2d');
+        const genderData = {{ by_gender| safe }};
+
+    new Chart(genderCtx, {
+        type: 'doughnut',
+        data: {
+            labels: genderData.map(d => d.sex === 'M' ? 'Male' : 'Female'),
+            datasets: [{
+                data: genderData.map(d => d.count),
+                backgroundColor: ['#3B82F6', '#EC4899'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: { weight: 'bold' } } }
+            }
+        }
+    });
+
+    // 2. Gender by Grade Level Chart
+    const genderGradeCtx = document.getElementById('genderGradeChart').getContext('2d');
+    const genderGradeData = {{ by_gender_grade| safe }};
+
+    // Grouping logic for Chart.js
+    const grades = [...new Set(genderGradeData.map(d => 'Grade ' + d.grade_level))].sort();
+    const maleGradeData = grades.map(g => {
+        const d = genderGradeData.find(d => 'Grade ' + d.grade_level === g && d.student__sex === 'M');
+        return d ? d.count : 0;
+    });
+    const femaleGradeData = grades.map(g => {
+        const d = genderGradeData.find(d => 'Grade ' + d.grade_level === g && d.student__sex === 'F');
+        return d ? d.count : 0;
+    });
+
+    new Chart(genderGradeCtx, {
+        type: 'bar',
+        data: {
+            labels: grades,
+            datasets: [
+                { label: 'Male', data: maleGradeData, backgroundColor: '#3B82F6', borderRadius: 6 },
+                { label: 'Female', data: femaleGradeData, backgroundColor: '#EC4899', borderRadius: 6 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 3. Gender by Section Chart
+    const genderSectionCtx = document.getElementById('genderSectionChart').getContext('2d');
+    const genderSectionData = {{ by_gender_section| safe }};
+
+    const sections = [...new Set(genderSectionData.map(d => d.section__name || 'Unassigned'))].sort();
+    const maleSectionData = sections.map(s => {
+        const d = genderSectionData.find(d => (d.section__name || 'Unassigned') === s && d.student__sex === 'M');
+        return d ? d.count : 0;
+    });
+    const femaleSectionData = sections.map(s => {
+        const d = genderSectionData.find(d => (d.section__name || 'Unassigned') === s && d.student__sex === 'F');
+        return d ? d.count : 0;
+    });
+
+    new Chart(genderSectionCtx, {
+        type: 'bar',
+        data: {
+            labels: sections,
+            datasets: [
+                { label: 'Male', data: maleSectionData, backgroundColor: '#3B82F6', borderRadius: 6 },
+                { label: 'Female', data: femaleSectionData, backgroundColor: '#EC4899', borderRadius: 6 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 4. Barangay Chart
+    const brgyCtx = document.getElementById('barangayChart').getContext('2d');
+    const brgyData = {{ by_barangay| safe }}.slice(0, 10); // Show top 10
+
+    new Chart(brgyCtx, {
+        type: 'bar',
+        data: {
+            labels: brgyData.map(d => d.barangay || 'Unspecified'),
+            datasets: [{
+                label: 'Learners',
+                data: brgyData.map(d => d.count),
+                backgroundColor: '#10B981',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, grid: { display: false } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 5. City Chart
+    const cityCtx = document.getElementById('cityChart').getContext('2d');
+    const cityData = {{ by_city| safe }}.slice(0, 10);
+
+    new Chart(cityCtx, {
+        type: 'bar',
+        data: {
+            labels: cityData.map(d => d.city || 'Unspecified'),
+            datasets: [{
+                label: 'Learners',
+                data: cityData.map(d => d.count),
+                backgroundColor: '#F59E0B',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, grid: { display: false } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

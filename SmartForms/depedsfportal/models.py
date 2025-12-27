@@ -175,10 +175,18 @@ class Section(models.Model):
     def __str__(self):
         return f"Grade {self.grade_level} - {self.name}"
 
-    def get_current_enrollment_count(self):
-        """Get the current number of students enrolled in this section"""
+    def get_current_enrollment_count(self, school_year=None):
+        """Get the number of students enrolled in this section for a specific or current year"""
+        if not school_year:
+            current_year = AcademicYear.get_current_year()
+            school_year = current_year.year_label if current_year else None
+
         return (
-            AcademicRecord.objects.filter(section=self, grade_level=self.grade_level)
+            AcademicRecord.objects.filter(
+                section=self,
+                grade_level=self.grade_level,
+                school_year=school_year,
+            )
             .exclude(remarks="PROMOTED")
             .values("student")
             .distinct()

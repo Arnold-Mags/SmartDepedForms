@@ -1,5 +1,12 @@
 import csv
 import datetime
+import io
+
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, Border, Side
+except ImportError:
+    Workbook = None
 from django.shortcuts import render, HttpResponse
 from django.views.generic import TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -15,13 +22,23 @@ try:
 except ImportError:
     HTML = None
 
-from .models import Student, AcademicRecord, School, AcademicYear
+from .models import Student, AcademicRecord, School, AcademicYear, Section
 
 
 class PrincipalAccessMixin(UserPassesTestMixin):
     def test_func(self):
         return (
             self.request.user.groups.filter(name="Principal").exists()
+            or self.request.user.is_superuser
+        )
+
+
+class RegistrarAccessMixin(UserPassesTestMixin):
+    def test_func(self):
+        return (
+            self.request.user.groups.filter(
+                name__in=["Registrar", "Principal"]
+            ).exists()
             or self.request.user.is_superuser
         )
 
@@ -196,6 +213,27 @@ class AnalyticsDashboardView(LoginRequiredMixin, PrincipalAccessMixin, TemplateV
             if status in ["ENROLLED", "TRANSFERRED", "DROPPED"]:
                 students = students.filter(status=status)
 
+        # Gender Distribution
+        by_gender = students.values("sex").annotate(count=Count("lrn")).order_by("sex")
+
+        # Gender by Grade Level
+        records = AcademicRecord.objects.filter(student__in=students)
+        if school_year:
+            records = records.filter(school_year=school_year)
+
+        by_gender_grade = (
+            records.values("grade_level", "student__sex")
+            .annotate(count=Count("id"))
+            .order_by("grade_level", "student__sex")
+        )
+
+        # Gender by Section
+        by_gender_section = (
+            records.values("section__name", "student__sex")
+            .annotate(count=Count("id"))
+            .order_by("section__name", "student__sex")
+        )
+
         # Location Analytics (Filtered)
         by_barangay = (
             students.values("barangay").annotate(count=Count("lrn")).order_by("-count")
@@ -210,12 +248,162 @@ class AnalyticsDashboardView(LoginRequiredMixin, PrincipalAccessMixin, TemplateV
         # Status Analytics (Filtered)
         by_status = students.values("status").annotate(count=Count("lrn"))
 
-        context["by_barangay"] = by_barangay
-        context["by_city"] = by_city
-        context["by_province"] = by_province
-        context["by_status"] = by_status
-        context["by_status"] = by_status
-        context["current_filters"] = self.request.GET
-        context["academic_years"] = AcademicYear.objects.all().order_by("-start_date")
+        context.update(
+            {
+                "by_gender": list(by_gender),
+                "by_gender_grade": list(by_gender_grade),
+                "by_gender_section": list(by_gender_section),
+                "by_barangay": list(by_barangay),
+                "by_city": list(by_city),
+                "by_province": list(by_province),
+                "by_status": list(by_status),
+                "current_filters": self.request.GET,
+                "academic_years": AcademicYear.objects.all().order_by("-start_date"),
+            }
+        )
 
         return context
+
+
+class ClassListPDFView(LoginRequiredMixin, RegistrarAccessMixin, View):
+    def get(self, request, pk, *args, **kwargs):
+        section = Section.objects.get(pk=pk)
+        school = School.objects.first()
+        current_year = AcademicYear.get_current_year()
+
+        # Get students currently in this section
+        academic_records = (
+            AcademicRecord.objects.filter(
+                section=section,
+                grade_level=section.grade_level,
+                school_year=current_year.year_label if current_year else None,
+            )
+            .exclude(remarks="PROMOTED")
+            .select_related("student")
+            .order_by("student__sex", "student__last_name", "student__first_name")
+        )
+
+        students_male = [r.student for r in academic_records if r.student.sex == "M"]
+        students_female = [r.student for r in academic_records if r.student.sex == "F"]
+
+        html_string = render_to_string(
+            "reports/class_list_pdf.html",
+            {
+                "section": section,
+                "school": school,
+                "academic_year": current_year,
+                "students_male": students_male,
+                "students_female": students_female,
+                "generated_at": datetime.datetime.now(),
+            },
+        )
+
+        if HTML:
+            html = HTML(string=html_string)
+            result = html.write_pdf()
+
+            response = HttpResponse(content_type="application/pdf")
+            response["Content-Disposition"] = (
+                f'inline; filename="class_list_{section.grade_level}_{section.name}_{datetime.date.today()}.pdf"'
+            )
+            response.write(result)
+            return response
+        else:
+            return HttpResponse("WeasyPrint not installed", status=500)
+
+
+class ClassListExcelView(LoginRequiredMixin, RegistrarAccessMixin, View):
+    def get(self, request, pk, *args, **kwargs):
+        if not Workbook:
+            return HttpResponse("openpyxl not installed", status=500)
+        section = Section.objects.get(pk=pk)
+        current_year = AcademicYear.get_current_year()
+
+        academic_records = (
+            AcademicRecord.objects.filter(
+                section=section,
+                grade_level=section.grade_level,
+                school_year=current_year.year_label if current_year else None,
+            )
+            .exclude(remarks="PROMOTED")
+            .select_related("student")
+            .order_by("student__sex", "student__last_name", "student__first_name")
+        )
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"Grade {section.grade_level} - {section.name}"
+
+        # Header Info
+        ws.merge_cells("A1:D1")
+        ws["A1"] = f"Class List: Grade {section.grade_level} - {section.name}"
+        ws["A1"].font = Font(bold=True, size=14)
+        ws["A1"].alignment = Alignment(horizontal="center")
+
+        ws.merge_cells("A2:D2")
+        ws["A2"] = f"School Year: {current_year.year_label if current_year else 'N/A'}"
+        ws["A2"].alignment = Alignment(horizontal="center")
+
+        # Table Header
+        headers = ["No.", "LRN", "Student Name", "Sex"]
+        ws.append([])  # Spacer
+        ws.append(headers)
+
+        header_row = ws[4]
+        for cell in header_row:
+            cell.font = Font(bold=True)
+            cell.border = Border(bottom=Side(style="thin"))
+
+        # Data
+        count = 1
+        # Male Students
+        male_exists = any(r.student.sex == "M" for r in academic_records)
+        if male_exists:
+            ws.append(["MALE"])
+            ws[ws.max_row][0].font = Font(bold=True)
+            for record in academic_records:
+                if record.student.sex == "M":
+                    ws.append(
+                        [
+                            count,
+                            record.student.lrn,
+                            f"{record.student.last_name}, {record.student.first_name}",
+                            "Male",
+                        ]
+                    )
+                    count += 1
+
+        # Female Students
+        ws.append([])  # Spacer
+        female_exists = any(r.student.sex == "F" for r in academic_records)
+        if female_exists:
+            ws.append(["FEMALE"])
+            ws[ws.max_row][0].font = Font(bold=True)
+            count = 1
+            for record in academic_records:
+                if record.student.sex == "F":
+                    ws.append(
+                        [
+                            count,
+                            record.student.lrn,
+                            f"{record.student.last_name}, {record.student.first_name}",
+                            "Female",
+                        ]
+                    )
+                    count += 1
+
+        # Column Widths
+        ws.column_dimensions["A"].width = 5
+        ws.column_dimensions["B"].width = 15
+        ws.column_dimensions["C"].width = 30
+        ws.column_dimensions["D"].width = 10
+
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = (
+            f'attachment; filename="class_list_{section.grade_level}_{section.name}_{datetime.date.today()}.xlsx"'
+        )
+
+        wb.save(response)
+        return response

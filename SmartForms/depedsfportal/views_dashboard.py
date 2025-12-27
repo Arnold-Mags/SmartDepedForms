@@ -1,7 +1,7 @@
 from django.views.generic import TemplateView, ListView, RedirectView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg, Q, Prefetch
 from django.http import JsonResponse
 from .models import (
     Student,
@@ -61,6 +61,14 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         # Apply Academic Year Filter Globally if a year is selected/active
         if selected_year:
             qs = qs.filter(academic_records__school_year=selected_year).distinct()
+
+        # Prefetch the specific academic record for the selected year
+        record_prefetch = Prefetch(
+            "academic_records",
+            queryset=AcademicRecord.objects.filter(school_year=selected_year),
+            to_attr="year_record",
+        )
+        qs = qs.prefetch_related(record_prefetch)
 
         # Registrar and Superuser see all students (filtered by year)
         if user.is_superuser or user.groups.filter(name="Registrar").exists():
@@ -123,24 +131,24 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context["selected_year"] = selected_year
 
         # Calculate counts for each status
-        current_year = AcademicYear.get_current_year()
+        current_year_obj = AcademicYear.get_current_year()
         is_current_view = not selected_year or (
-            current_year and selected_year == current_year.year_label
+            current_year_obj and selected_year == current_year_obj.year_label
         )
 
+        # Base count: All students who have a record in the selected year
+        total_in_year = students.count()
+
         if is_current_view:
-            # Active count: Only currently enrolled students
+            # For current year, use the global ENROLLED status to identify currently active students
             enrolled_count = students.filter(status="ENROLLED").count()
         else:
-            # Historical count:
-            # User feedback implies they want "Enrolled" to EXCLUDE Transferred/Dropped even historically.
-            # Interpreting "Total Enrolled" as "Students from this year who are still Active/Enrolled in the system".
-            # Logic: status="ENROLLED"
-            enrolled_count = students.filter(status="ENROLLED").count()
+            # For past years, "Enrolled" is anyone who had a record that year
+            # (unless we have more granular per-year status, which we don't yet)
+            enrolled_count = total_in_year
 
-        # For Transferred/Dropped, we rely on the STUDENT'S status.
-        # Note: This reflects their CURRENT status. If they dropped 2 years ago, they are still "Dropped" now.
-        # So filtering the students enrolled in that year by their *current* status is the best approximation.
+        # Transferred/Dropped are historical statuses.
+        # If they are currently Transferred/Dropped, we count them as such.
         transferred_count = students.filter(status="TRANSFERRED").count()
         dropped_count = students.filter(status="DROPPED").count()
 
@@ -203,9 +211,8 @@ class PrincipalDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             # For current year, count only those with explicit ENROLLED status
             enrolled_count = students_qs.filter(status="ENROLLED").count()
         else:
-            # For past years, also keep strictly ENROLLED (Active) students to match user expectations
-            # "Total Students" (Yellow Card) will still show the full count of records.
-            enrolled_count = students_qs.filter(status="ENROLLED").count()
+            # For past years, enrolled is everyone who had a record in that year
+            enrolled_count = total_students
 
         # Helper subsets
         transferred_count = students_qs.filter(status="TRANSFERRED").count()

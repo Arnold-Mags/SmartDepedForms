@@ -58,8 +58,9 @@ from depedsfportal.views_reports import (
     ReportDashboardView,
     ExportReportCSVView,
     ExportReportPDFView,
-    ExportReportPDFView,
     AnalyticsDashboardView,
+    ClassListPDFView,
+    ClassListExcelView,
 )
 from depedsfportal.views_import import StudentImportView
 
@@ -141,6 +142,16 @@ urlpatterns = [
     ),
     path(
         "reports/export/pdf/", ExportReportPDFView.as_view(), name="export_report_pdf"
+    ),
+    path(
+        "reports/export/class-list/pdf/<int:pk>/",
+        ClassListPDFView.as_view(),
+        name="export_class_list_pdf",
+    ),
+    path(
+        "reports/export/class-list/excel/<int:pk>/",
+        ClassListExcelView.as_view(),
+        name="export_class_list_excel",
     ),
     path("analytics/", AnalyticsDashboardView.as_view(), name="analytics_dashboard"),
     # Import

@@ -225,7 +225,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <!-- Helper to show latest record or button to add -->
-                            {% with latest_record=student.academic_records.first %}
+                            {% with latest_record=student.year_record.0 %}
                             {% if latest_record %}
                             {% if perms.depedsfportal.add_section or user.is_superuser %}
                             <!-- Registrar: Clickable to edit enrollment -->
@@ -267,7 +267,7 @@
                                 {% endif %}
 
                                 <!-- View Records Button -->
-                                {% with latest_record=student.academic_records.first %}
+                                {% with latest_record=student.year_record.0 %}
                                 {% if latest_record %}
                                 <a href="{% url 'record_detail' latest_record.pk %}"
                                     class="text-gray-600 hover:text-gray-900 inline-flex items-center"

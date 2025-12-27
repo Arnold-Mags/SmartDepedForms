@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>SF10 - {{ student.lrn }}</title>
+    <style>
+        @page {
+            size: letter portrait;
+            margin: 0.5cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            line-height: 1.2;
+        }
+
+        .page {
+            page-break-after: always;
+            padding: 10px;
+        }
+
+        .page:last-child {
+            page-break-after: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+        }
+
+        .header h1 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .header h2 {
+            font-size: 10pt;
+            font-weight: normal;
+        }
+
+        .header .form-code {
+            font-size: 8pt;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .section {
+            margin-bottom: 10px;
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 10pt;
+            background-color: #f0f0f0;
+            padding: 3px 5px;
+            margin: -8px -8px 8px -8px;
+            border-bottom: 1px solid #000;
+        }
+
+        .field-group {
+            display: table;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .field {
+            display: table-row;
+        }
+
+        .field-label {
+            display: table-cell;
+            font-weight: bold;
+            font-size: 8pt;
+            width: 30%;
+            padding: 2px 5px;
+            vertical-align: top;
+        }
+
+        .field-value {
+            display: table-cell;
+            border-bottom: 1px solid #000;
+            padding: 2px 5px;
+            vertical-align: top;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        table.grades-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 8pt;
+        }
+
+        table.grades-table th,
+        table.grades-table td {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            text-align: center;
+        }
+
+        table.grades-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            font-size: 7pt;
+        }
+
+        table.grades-table td.subject-name {
+            text-align: left;
+            font-weight: normal;
+        }
+
+        .record-header {
+            background-color: #e0e0e0;
+            padding: 5px;
+            margin: -8px -8px 8px -8px;
+            border-bottom: 1px solid #000;
+            font-size: 8pt;
+        }
+
+        .record-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            margin-bottom: 8px;
+            font-size: 8pt;
+        }
+
+        .record-info-item {
+            display: flex;
+        }
+
+        .record-info-label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .certification {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #000;
+            font-size: 8pt;
+        }
+
+        .signature-line {
+            margin-top: 30px;
+            border-top: 1px solid #000;
+            padding-top: 3px;
+            text-align: center;
+            font-size: 8pt;
+        }
+
+        .remedial-section {
+            margin-top: 8px;
+            padding: 5px;
+            border: 1px solid #000;
+            font-size: 7pt;
+        }
+
+        .remedial-section .title {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .checkbox {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .checkbox.checked::after {
+            content: "✓";
+            display: block;
+            text-align: center;
+            line-height: 12px;
+            font-weight: bold;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 72pt;
+            color: rgba(0, 0, 0, 0.05);
+            z-index: -1;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- PAGE 1: FRONT -->
+    <div class="page">
+        <div class="watermark">SF10-JHS</div>
+
+        <div class="header">
+            <table style="width: 100%; border: none; margin-bottom: 0;">
+                <tr style="border: none;">
+                    <td style="width: 15%; text-align: left; border: none; padding: 0;">
+                        <img src="{% static 'depedkag.PNG' %}" style="height: 60px;">
+                    </td>
+                    <td style="width: 70%; text-align: center; border: none; padding: 0;">
+                        <h1 style="border: none; margin: 0;">Department of Education</h1>
+                        <h2 style="border: none; margin: 0;">Republic of the Philippines</h2>
+                    </td>
+                    <td style="width: 15%; text-align: right; border: none; padding: 0;">
+                        <img src="{% static 'logo.png' %}" style="height: 60px;">
+                    </td>
+                </tr>
+            </table>
+            <h1 style="margin-top: 5px;">Learner Permanent Academic Record for Junior High School (SF10-JHS)</h1>
+            <div class="form-code">(Formerly Form 138) | Revised 2025 based on DepEd Order No. 10, s. 2024</div>
+        </div>
+
+        <!-- LEARNER'S PERSONAL INFORMATION -->
+        <div class="section">
+            <div class="section-title">LEARNER'S PERSONAL INFORMATION</div>
+            <div class="field-group">
+                <div class="field">
+                    <div class="field-label">LAST NAME:</div>
+                    <div class="field-value">{{ student.last_name|upper }}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">FIRST NAME:</div>
+                    <div class="field-value">{{ student.first_name|upper }}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">MIDDLE NAME:</div>
+                    <div class="field-value">{{ student.middle_name|upper|default:"" }}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">NAME EXTN.:</div>
+                    <div class="field-value">{{ student.name_extension|upper|default:"" }}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">LRN:</div>
+                    <div class="field-value">{{ student.lrn }}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">BIRTHDATE:</div>
+                    <div class="field-value">{{ student.birthdate|date:"m/d/Y" }}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">SEX:</div>
+                    <div class="field-value">{{ student.get_sex_display }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ELIGIBILITY FOR JUNIOR HIGH SCHOOL ENROLLMENT -->
+        <div class="section">
+            <div class="section-title">ELIGIBILITY FOR JUNIOR HIGH SCHOOL ENROLLMENT</div>
+            <div style="font-size: 8pt; margin-bottom: 5px;">
+                <strong>Credential Presented for Grade 7:</strong>
+            </div>
+            <div style="font-size: 8pt; line-height: 1.5;">
+                <span
+                    class="checkbox {% if student.credential_presented == 'KINDER_PROGRESS' %}checked{% endif %}"></span>
+                Elementary School Report Card (Form 138-E) &nbsp;
+                <span
+                    class="checkbox {% if student.credential_presented == 'ECCD_CHECKLIST' %}checked{% endif %}"></span>
+                Certificate of Completion (Elementary) &nbsp;
+                <span
+                    class="checkbox {% if student.credential_presented == 'KINDER_CERTIFICATE' %}checked{% endif %}"></span>
+                Transfer Credentials
+            </div>
+            {% if student.credential_presented == 'PEPT' %}
+            <div style="margin-top: 5px; font-size: 8pt;">
+                <strong>PEPT Passer</strong><br>
+                Rating: {{ student.pept_rating|default:"" }} |
+                Date: {{ student.pept_date|date:"m/d/Y"|default:"" }}<br>
+                Testing Center: {{ student.pept_testing_center|default:"" }}
+            </div>
+            {% endif %}
+            {% if student.credential_presented == 'OTHER' %}
+            <div style="margin-top: 5px; font-size: 8pt;">
+                <strong>Other Credential:</strong> {{ student.other_credential }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- SCHOLASTIC RECORDS -->
+        {% for page in pages %}
+        {% if forloop.first %}
+        <!-- First two records on Page 1 -->
+        {% for record in page|slice:":2" %}
+        <div class="section">
+            <div class="record-header">
+                <strong>School Year:</strong> {{ record.school_year }} |
+                <strong>Grade Level:</strong> {{ record.grade_level }} |
+                <strong>Section:</strong> {{ record.section }}
+            </div>
+            <div class="record-info">
+                <div class="record-info-item">
+                    <span class="record-info-label">School:</span>
+                    <span>{{ school.name }}</span>
+                </div>
+                <div class="record-info-item">
+                    <span class="record-info-label">School ID:</span>
+                    <span>{{ school.school_id }}</span>
+                </div>
+                <div class="record-info-item">
+                    <span class="record-info-label">District:</span>
+                    <span>{{ school.district }}</span>
+                </div>
+                <div class="record-info-item">
+                    <span class="record-info-label">Division:</span>
+                    <span>{{ school.division }}</span>
+                </div>
+                <div class="record-info-item">
+                    <span class="record-info-label">Region:</span>
+                    <span>{{ school.region }}</span>
+                </div>
+                <div class="record-info-item">
+                    <span class="record-info-label">Adviser/Teacher:</span>
+                    <span>{{ record.adviser_teacher.get_full_name|default:record.adviser_teacher.username }}</span>
+                </div>
+            </div>
+
+            <table class="grades-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 30%;">LEARNING AREAS</th>
+                        <th colspan="4">Quarterly Rating</th>
+                        <th rowspan="2">Final<br>Rating</th>
+                        <th rowspan="2">Remarks</th>
+                    </tr>
+                    <tr>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grade in record.subject_grades.all %}
+                    <tr>
+                        <td class="subject-name">{{ grade.learning_area.name }}</td>
+                        <td>{{ grade.quarter_1|default:"" }}</td>
+                        <td>{{ grade.quarter_2|default:"" }}</td>
+                        <td>{{ grade.quarter_3|default:"" }}</td>
+                        <td>{{ grade.quarter_4|default:"" }}</td>
+                        <td><strong>{{ grade.final_rating|default:"" }}</strong></td>
+                        <td style="font-size: 7pt;">{{ grade.remarks|default:"" }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background-color: #f0f0f0;">
+                        <td colspan="5" style="text-align: right;"><strong>General Average:</strong></td>
+                        <td colspan="2"><strong>{{ record.general_average|default:"" }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Remedial Classes -->
+            {% if record.get_subjects_for_remedial %}
+            <div class="remedial-section">
+                <div class="title">Remedial Classes</div>
+                <table class="grades-table">
+                    <thead>
+                        <tr>
+                            <th>Learning Area</th>
+                            <th>Final Rating</th>
+                            <th>Remedial Mark</th>
+                            <th>Recomputed Final Grade</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in record.get_subjects_for_remedial %}
+                        <tr>
+                            <td class="subject-name">{{ grade.learning_area.name }}</td>
+                            <td>{{ grade.final_rating }}</td>
+                            <td>{{ grade.remedial_mark|default:"" }}</td>
+                            <td>{{ grade.recomputed_final_grade|default:"" }}</td>
+                            <td style="font-size: 7pt;">{{ grade.remarks }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if record.get_subjects_for_remedial.first.remedial_conducted_from %}
+                <div style="margin-top: 3px;">
+                    <strong>Date Conducted:</strong>
+                    {{ record.get_subjects_for_remedial.first.remedial_conducted_from|date:"m/d/Y" }} to
+                    {{ record.get_subjects_for_remedial.first.remedial_conducted_to|date:"m/d/Y" }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- PAGE 2 and beyond: BACK (Continuation of Scholastic Records) -->
+    {% for page in pages %}
+    {% if forloop.first %}
+    {% if page|length > 2 %}
+    <div class="page">
+        <div class="watermark">SF10-JHS Page {{ forloop.counter|add:"1" }}</div>
+        <div class="header">
+            <div class="form-code">SF10-JHS | Page 2 of ____ | Continued</div>
+        </div>
+
+        {% for record in page|slice:"2:" %}
+        <div class="section">
+            <div class="record-header">
+                <strong>School Year:</strong> {{ record.school_year }} |
+                <strong>Grade Level:</strong> {{ record.grade_level }} |
+                <strong>Section:</strong> {{ record.section }}
+            </div>
+            <div class="record-info">
+                <div class="record-info-item">
+                    <span class="record-info-label">School:</span>
+                    <span>{{ school.name }}</span>
+                </div>
+                <div class="record-info-item">
+                    <span class="record-info-label">School ID:</span>
+                    <span>{{ school.school_id }}</span>
+                </div>
+                <div class="record-info-item">
+                    <span class="record-info-label">Adviser/Teacher:</span>
+                    <span>{{ record.adviser_teacher.get_full_name|default:record.adviser_teacher.username }}</span>
+                </div>
+            </div>
+
+            <table class="grades-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 30%;">LEARNING AREAS</th>
+                        <th colspan="4">Quarterly Rating</th>
+                        <th rowspan="2">Final<br>Rating</th>
+                        <th rowspan="2">Remarks</th>
+                    </tr>
+                    <tr>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grade in record.subject_grades.all %}
+                    <tr>
+                        <td class="subject-name">{{ grade.learning_area.name }}</td>
+                        <td>{{ grade.quarter_1|default:"" }}</td>
+                        <td>{{ grade.quarter_2|default:"" }}</td>
+                        <td>{{ grade.quarter_3|default:"" }}</td>
+                        <td>{{ grade.quarter_4|default:"" }}</td>
+                        <td><strong>{{ grade.final_rating|default:"" }}</strong></td>
+                        <td style="font-size: 7pt;">{{ grade.remarks|default:"" }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background-color: #f0f0f0;">
+                        <td colspan="5" style="text-align: right;"><strong>General Average:</strong></td>
+                        <td colspan="2"><strong>{{ record.general_average|default:"" }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {% if record.get_subjects_for_remedial %}
+            <div class="remedial-section">
+                <div class="title">Remedial Classes</div>
+                <table class="grades-table">
+                    <thead>
+                        <tr>
+                            <th>Learning Area</th>
+                            <th>Final Rating</th>
+                            <th>Remedial Mark</th>
+                            <th>Recomputed Final Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in record.get_subjects_for_remedial %}
+                        <tr>
+                            <td class="subject-name">{{ grade.learning_area.name }}</td>
+                            <td>{{ grade.final_rating }}</td>
+                            <td>{{ grade.remedial_mark|default:"" }}</td>
+                            <td>{{ grade.recomputed_final_grade|default:"" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Certification Section -->
+        <div class="certification">
+            <strong>CERTIFICATION</strong><br>
+            I CERTIFY that this is a true record of
+            <strong>{{ student.get_full_name|upper }}</strong> with LRN <strong>{{ student.lrn }}</strong>
+            and that he/she is eligible for admission to the next grade level.
+
+            <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <div><strong>School Name:</strong> {{ school.name }}</div>
+                    <div><strong>School ID:</strong> {{ school.school_id }}</div>
+                    <div><strong>Division:</strong> {{ school.division }}</div>
+                </div>
+                <div>
+                    <div><strong>Last School Year Attended:</strong>
+                        {% if pages.0 %}{{ pages.0.0.school_year }}{% endif %}
+                    </div>
+                    <div><strong>Date:</strong> {{ generated_date|date:"F d, Y" }}</div>
+                </div>
+            </div>
+
+            <div class="signature-line">
+                Signature of Principal/School Head over Printed Name
+            </div>
+
+            <div style="text-align: center; margin-top: 10px; font-size: 7pt;">
+                (Affix School Seal here)
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <!-- Additional pages for more records -->
+    <div class="page">
+        <div class="watermark">SF10-JHS Page {{ forloop.counter|add:"1" }}</div>
+        <div class="header">
+            <div class="form-code">SF10-JHS | Page {{ forloop.counter|add:"1" }} | Continued</div>
+        </div>
+
+        {% for record in page %}
+        <div class="section">
+            <div class="record-header">
+                <strong>School Year:</strong> {{ record.school_year }} |
+                <strong>Grade Level:</strong> {{ record.grade_level }} |
+                <strong>Section:</strong> {{ record.section }}
+            </div>
+
+            <table class="grades-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 30%;">LEARNING AREAS</th>
+                        <th colspan="4">Quarterly Rating</th>
+                        <th rowspan="2">Final<br>Rating</th>
+                        <th rowspan="2">Remarks</th>
+                    </tr>
+                    <tr>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grade in record.subject_grades.all %}
+                    <tr>
+                        <td class="subject-name">{{ grade.learning_area.name }}</td>
+                        <td>{{ grade.quarter_1|default:"" }}</td>
+                        <td>{{ grade.quarter_2|default:"" }}</td>
+                        <td>{{ grade.quarter_3|default:"" }}</td>
+                        <td>{{ grade.quarter_4|default:"" }}</td>
+                        <td><strong>{{ grade.final_rating|default:"" }}</strong></td>
+                        <td style="font-size: 7pt;">{{ grade.remarks|default:"" }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background-color: #f0f0f0;">
+                        <td colspan="5" style="text-align: right;"><strong>General Average:</strong></td>
+                        <td colspan="2"><strong>{{ record.general_average|default:"" }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</body>
+
+</html>
