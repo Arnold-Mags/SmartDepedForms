@@ -3,13 +3,26 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import School, Student, AcademicRecord, SubjectGrade, LearningArea
+from .models import (
+    School,
+    Student,
+    AcademicRecord,
+    SubjectGrade,
+    LearningArea,
+    Section,
+    TeacherProfile,
+)
+from django.contrib.auth.models import User, Group
 from .forms import (
     SchoolForm,
     StudentForm,
     AcademicRecordForm,
     SubjectGradeForm,
     LearningAreaForm,
+    SectionForm,
+    TeacherProfileForm,
+    UserForm,
+    SubjectGradeRemedialForm,
 )
 
 # --- Principal Views ---
@@ -45,15 +58,28 @@ class SchoolUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 # --- Teacher Views ---
 
 
-class TeacherAccessMixin(UserPassesTestMixin):
+class RegistrarAccessMixin(UserPassesTestMixin):
     def test_func(self):
+        user = self.request.user
+        return user.groups.filter(name="Registrar").exists() or user.is_superuser
+
+
+class GradingAccessMixin(UserPassesTestMixin):
+    def test_func(self):
+        user = self.request.user
         return (
-            self.request.user.groups.filter(name="Teacher").exists()
-            or self.request.user.is_superuser
+            user.groups.filter(name__in=["Teacher", "Registrar"]).exists()
+            or user.is_superuser
         )
 
 
-class StudentCreateView(LoginRequiredMixin, TeacherAccessMixin, CreateView):
+class TeacherAccessMixin(GradingAccessMixin):
+    """Keep for backward compatibility but use GradingAccessMixin for new views"""
+
+    pass
+
+
+class StudentCreateView(LoginRequiredMixin, RegistrarAccessMixin, CreateView):
     model = Student
     form_class = StudentForm
     template_name = "student_form.html"
@@ -64,7 +90,7 @@ class StudentCreateView(LoginRequiredMixin, TeacherAccessMixin, CreateView):
         return super().form_valid(form)
 
 
-class StudentUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView):
+class StudentUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
     model = Student
     form_class = StudentForm
     template_name = "student_form.html"
@@ -75,13 +101,21 @@ class StudentUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView):
         return super().form_valid(form)
 
 
-class AcademicRecordCreateView(LoginRequiredMixin, TeacherAccessMixin, CreateView):
+class AcademicRecordCreateView(LoginRequiredMixin, RegistrarAccessMixin, CreateView):
     model = AcademicRecord
     form_class = AcademicRecordForm
     template_name = "academic_record_form.html"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Optional: pass student_pk to form if needed for logic
+        return kwargs
+
     def get_initial(self):
-        return {"student": self.kwargs.get("student_pk")}
+        initial = super().get_initial()
+        initial["student"] = self.kwargs.get("student_pk")
+        # Pre-fill adviser if registrar is logged in?
+        return initial
 
     def form_valid(self, form):
         form.instance.student_id = self.kwargs.get("student_pk")
@@ -126,7 +160,7 @@ class SubjectGradeCreateView(LoginRequiredMixin, TeacherAccessMixin, CreateView)
 # Learning Area Views
 
 
-class LearningAreaListView(LoginRequiredMixin, TeacherAccessMixin, ListView):
+class LearningAreaListView(LoginRequiredMixin, GradingAccessMixin, ListView):
     model = LearningArea
     template_name = "learning_area_list.html"
     context_object_name = "learning_areas"
@@ -140,7 +174,7 @@ class LearningAreaListView(LoginRequiredMixin, TeacherAccessMixin, ListView):
         return context
 
 
-class LearningAreaCreateView(LoginRequiredMixin, TeacherAccessMixin, CreateView):
+class LearningAreaCreateView(LoginRequiredMixin, RegistrarAccessMixin, CreateView):
     model = LearningArea
     form_class = LearningAreaForm
     template_name = "learning_area_form.html"
@@ -151,7 +185,7 @@ class LearningAreaCreateView(LoginRequiredMixin, TeacherAccessMixin, CreateView)
         return super().form_valid(form)
 
 
-class LearningAreaUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView):
+class LearningAreaUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
     model = LearningArea
     form_class = LearningAreaForm
     template_name = "learning_area_form.html"
@@ -162,7 +196,7 @@ class LearningAreaUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView)
         return super().form_valid(form)
 
 
-class LearningAreaDeleteView(LoginRequiredMixin, TeacherAccessMixin, View):
+class LearningAreaDeleteView(LoginRequiredMixin, RegistrarAccessMixin, View):
     def post(self, request, pk):
         learning_area = get_object_or_404(LearningArea, pk=pk)
         learning_area.delete()
@@ -175,7 +209,7 @@ class LearningAreaDeleteView(LoginRequiredMixin, TeacherAccessMixin, View):
 from django.views.generic import DetailView
 
 
-class AcademicRecordDetailView(LoginRequiredMixin, TeacherAccessMixin, DetailView):
+class AcademicRecordDetailView(LoginRequiredMixin, GradingAccessMixin, DetailView):
     model = AcademicRecord
     template_name = "academic_record_detail.html"
     context_object_name = "record"
@@ -187,7 +221,7 @@ class AcademicRecordDetailView(LoginRequiredMixin, TeacherAccessMixin, DetailVie
         return context
 
 
-class SubjectGradeUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView):
+class SubjectGradeUpdateView(LoginRequiredMixin, GradingAccessMixin, UpdateView):
     model = SubjectGrade
     form_class = SubjectGradeForm
     template_name = "subject_grade_form.html"
@@ -202,10 +236,174 @@ class SubjectGradeUpdateView(LoginRequiredMixin, TeacherAccessMixin, UpdateView)
         return super().form_valid(form)
 
 
-class SubjectGradeDeleteView(LoginRequiredMixin, TeacherAccessMixin, View):
+class SubjectGradeDeleteView(LoginRequiredMixin, GradingAccessMixin, View):
     def post(self, request, pk):
         grade = get_object_or_404(SubjectGrade, pk=pk)
         record_id = grade.academic_record.pk
         grade.delete()
         messages.success(request, "Grade entry deleted.")
         return redirect("record_detail", pk=record_id)
+
+
+# --- Section & Teacher Management (Registrar) ---
+
+
+class SectionListView(LoginRequiredMixin, RegistrarAccessMixin, ListView):
+    model = Section
+    template_name = "section_list.html"
+    context_object_name = "sections"
+
+
+class SectionCreateView(LoginRequiredMixin, RegistrarAccessMixin, CreateView):
+    model = Section
+    form_class = SectionForm
+    template_name = "section_form.html"
+    success_url = reverse_lazy("section_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Section created successfully.")
+        return super().form_valid(form)
+
+
+class SectionUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):
+    model = Section
+    form_class = SectionForm
+    template_name = "section_form.html"
+    success_url = reverse_lazy("section_list")
+
+
+class TeacherCreateView(LoginRequiredMixin, RegistrarAccessMixin, View):
+    template_name = "teacher_account_form.html"
+
+    def get(self, request):
+        user_form = UserForm()
+        profile_form = TeacherProfileForm()
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "profile_form": profile_form},
+        )
+
+    def post(self, request):
+        user_form = UserForm(request.POST)
+        profile_form = TeacherProfileForm(request.POST)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user = user_form.save(commit=False)
+            user.set_password(user_form.cleaned_data["password"])
+            user.save()
+
+            # Add to Teacher group
+            teacher_group, _ = Group.objects.get_or_create(name="Teacher")
+            user.groups.add(teacher_group)
+
+            profile = profile_form.save(commit=False)
+            profile.user = user
+            profile.save()
+
+            messages.success(request, "Teacher account created successfully.")
+            return redirect("teacher_dashboard")
+
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "profile_form": profile_form},
+        )
+
+
+class TeacherListView(LoginRequiredMixin, RegistrarAccessMixin, ListView):
+    model = TeacherProfile
+    template_name = "teacher_list.html"
+    context_object_name = "profiles"
+
+    def get_queryset(self):
+        return TeacherProfile.objects.select_related("user", "section").all()
+
+
+class TeacherDetailView(LoginRequiredMixin, RegistrarAccessMixin, DetailView):
+    model = TeacherProfile
+    template_name = "teacher_profile_detail.html"
+    context_object_name = "profile"
+
+
+class TeacherUpdateView(LoginRequiredMixin, RegistrarAccessMixin, View):
+    template_name = "teacher_account_form.html"
+
+    def get(self, request, pk):
+        profile = get_object_or_404(TeacherProfile, pk=pk)
+        user_form = UserForm(instance=profile.user)
+        # Handle password separately for security - don't show existing
+        user_form.fields.pop("password")
+        profile_form = TeacherProfileForm(instance=profile)
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "profile_form": profile_form, "is_update": True},
+        )
+
+    def post(self, request, pk):
+        profile = get_object_or_404(TeacherProfile, pk=pk)
+        user_form = UserForm(request.POST, instance=profile.user)
+        user_form.fields.pop("password")
+        profile_form = TeacherProfileForm(request.POST, instance=profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, "Teacher account updated successfully.")
+            return redirect("teacher_list")
+
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "profile_form": profile_form, "is_update": True},
+        )
+
+
+# --- Academic Evaluation Actions ---
+
+
+class AcademicRecordPromoteView(LoginRequiredMixin, GradingAccessMixin, View):
+    def post(self, request, pk):
+        record = get_object_or_404(AcademicRecord, pk=pk)
+
+        # Logic to promote: set remark to PROMOTED and create next grade record
+        record.remarks = "PROMOTED"
+        record.save(update_fields=["remarks"])
+
+        next_record = record.promote()
+
+        if next_record:
+            messages.success(
+                request, f"Student promoted to Grade {next_record.grade_level}."
+            )
+            return redirect("record_detail", pk=next_record.pk)
+        else:
+            messages.success(request, "Student marked as PROMOTED/GRADUATED.")
+            return redirect("record_detail", pk=record.pk)
+
+
+class AcademicRecordRetainView(LoginRequiredMixin, GradingAccessMixin, View):
+    def post(self, request, pk):
+        record = get_object_or_404(AcademicRecord, pk=pk)
+        record.retain()
+        messages.warning(request, "Student marked as RETAINED for this grade level.")
+        return redirect("record_detail", pk=record.pk)
+
+
+class SubjectGradeRemedialUpdateView(
+    LoginRequiredMixin, GradingAccessMixin, UpdateView
+):
+    model = SubjectGrade
+    form_class = SubjectGradeRemedialForm
+    template_name = "subject_grade_remedial_form.html"
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "record_detail", kwargs={"pk": self.object.academic_record.pk}
+        )
+
+    def form_valid(self, form):
+        # The model's save() handles final rating recomputation via clean()
+        messages.success(self.request, "Remedial information updated.")
+        return super().form_valid(form)

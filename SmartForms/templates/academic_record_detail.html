@@ -8,26 +8,86 @@
 
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between items-start">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Academic Record: Grade {{ record.grade_level }}</h1>
             <h2 class="text-gray-600">Student: <strong>{{ record.student.last_name }}, {{ record.student.first_name }}
                 </strong> (LRN: {{ record.student.lrn }})</h2>
             <p class="text-sm text-gray-500">School Year: {{ record.school_year }} | Section: {{ record.section }}</p>
         </div>
-        <div>
+        <div class="flex flex-col space-y-2">
             <a href="{% url 'grade_add' record.pk %}"
-                class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="bg-deped-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Add Grade Entry
             </a>
+
+            <div class="flex space-x-2">
+                <form action="{% url 'record_promote' record.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md font-medium text-xs shadow-sm flex items-center transition">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                        </svg>
+                        Promote to Higher Grade
+                    </button>
+                </form>
+
+                <form action="{% url 'record_retain' record.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-md font-medium text-xs shadow-sm flex items-center transition">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg>
+                        Retain
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded-lg shadow border border-gray-100 flex items-center">
+            <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Computed General Average</p>
+                <p
+                    class="text-2xl font-bold {% if record.general_average < 75 %}text-red-600{% else %}text-green-600{% endif %}">
+                    {{ record.general_average|default:"--" }}
+                </p>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow border border-gray-100 flex items-center">
+            <div
+                class="p-3 rounded-full {% if record.remarks == 'PROMOTED' %}bg-green-100 text-green-600{% elif record.remarks == 'RETAINED' or record.remarks == 'FAILED' %}bg-red-100 text-red-600{% else %}bg-gray-100 text-gray-600{% endif %} mr-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Status / Remarks</p>
+                <p class="text-2xl font-bold uppercase">{{ record.remarks|default:"Pending Evaluation" }}</p>
+            </div>
         </div>
     </div>
 
     <!-- Grades Table -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h3 class="text-lg font-medium text-gray-900">Scholastic Achievement</h3>
         </div>
@@ -48,26 +108,41 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for grade in grades %}
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50 {% if grade.final_rating < 75 %}bg-red-50{% endif %}">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ grade.learning_area.name }}</td>
+                        {{ grade.learning_area.name }}
+                        {% if grade.final_rating < 75 %} <span
+                            class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                            Failed
+                            </span>
+                            {% endif %}
+                            {% if grade.recomputed_final_grade %}
+                            <div class="text-xs text-green-600 mt-1">
+                                Recomputed: <strong>{{ grade.recomputed_final_grade }}</strong> (Passed vs Remedial)
+                            </div>
+                            {% endif %}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_1|default:"-" }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_2|default:"-" }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_3|default:"-" }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ grade.quarter_4|default:"-" }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold">
+                    <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold {% if grade.final_rating < 75 %}text-red-600{% endif %}">
                         {{ grade.final_rating|default:"-" }}</td>
                     <td
-                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-center space-x-2">
+                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-center space-x-3">
                         <a href="{% url 'grade_edit' grade.pk %}" class="text-deped-blue hover:text-blue-900">Edit</a>
 
-                        <form id="delete-grade-{{ grade.pk }}" action="{% url 'grade_delete' grade.pk %}" method="post"
-                            class="inline">
-                            {% csrf_token %}
-                            <!-- Reuse global confirmDelete -->
-                            <button type="button" onclick="confirmDelete('delete-grade-{{ grade.pk }}')"
-                                class="text-red-600 hover:text-red-900 ml-2">Delete</button>
-                        </form>
+                        {% if grade.final_rating < 75 %} <a href="{% url 'grade_remedial' grade.pk %}"
+                            class="text-green-600 hover:text-green-800 font-bold">Remedial</a>
+                            {% endif %}
+
+                            <form id="delete-grade-{{ grade.pk }}" action="{% url 'grade_delete' grade.pk %}"
+                                method="post" class="inline">
+                                {% csrf_token %}
+                                <button type="button" onclick="confirmDelete('delete-grade-{{ grade.pk }}')"
+                                    class="text-red-600 hover:text-red-900">Delete</button>
+                            </form>
                     </td>
                 </tr>
                 {% empty %}
@@ -78,7 +153,5 @@
             </tbody>
         </table>
     </div>
-
-
 </div>
 {% endblock %}

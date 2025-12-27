@@ -23,9 +23,11 @@ class Student(models.Model):
     ]
 
     STATUS_CHOICES = [
+        ("PENDING", "Pending"),
         ("ENROLLED", "Enrolled"),
         ("TRANSFERRED", "Transferred Out"),
         ("DROPPED", "Dropped"),
+        ("GRADUATED", "Graduated"),
     ]
 
     lrn = models.CharField(
@@ -44,7 +46,7 @@ class Student(models.Model):
     credential_presented = models.CharField(
         max_length=20, choices=CREDENTIAL_CHOICES, blank=True, null=True
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ENROLLED")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
     other_credential = models.CharField(max_length=200, blank=True)
     pept_rating = models.DecimalField(
         max_digits=5,
@@ -108,6 +110,48 @@ class School(models.Model):
         return f"{self.name} ({self.school_id})"
 
 
+class Section(models.Model):
+    """Grade level sections managed by Registrar"""
+
+    GRADE_CHOICES = [
+        (7, "Grade 7"),
+        (8, "Grade 8"),
+        (9, "Grade 9"),
+        (10, "Grade 10"),
+    ]
+
+    grade_level = models.IntegerField(choices=GRADE_CHOICES)
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        ordering = ["grade_level", "name"]
+        unique_together = ["grade_level", "name"]
+        verbose_name = "Section"
+        verbose_name_plural = "Sections"
+
+    def __str__(self):
+        return f"Grade {self.grade_level} - {self.name}"
+
+
+class TeacherProfile(models.Model):
+    """Advisory information for Teachers"""
+
+    user = models.OneToOneField(
+        "auth.User", on_delete=models.CASCADE, related_name="teacher_profile"
+    )
+    grade_level = models.IntegerField(choices=Section.GRADE_CHOICES)
+    section = models.ForeignKey(
+        Section, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    class Meta:
+        verbose_name = "Teacher Profile"
+        verbose_name_plural = "Teacher Profiles"
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.section if self.section else 'No Section'}"
+
+
 class AcademicRecord(models.Model):
     """Academic record for a student in a specific grade level and school year"""
 
@@ -132,9 +176,17 @@ class AcademicRecord(models.Model):
         School, on_delete=models.PROTECT, related_name="academic_records"
     )
     grade_level = models.IntegerField(choices=GRADE_CHOICES)
-    section = models.CharField(max_length=50)
+    section = models.ForeignKey(
+        Section, on_delete=models.PROTECT, related_name="academic_records"
+    )
     school_year = models.CharField(max_length=9, help_text="Format: 2024-2025")
-    adviser_teacher = models.CharField(max_length=200)
+    adviser_teacher = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="advised_records",
+    )
 
     # Computed fields
     general_average = models.DecimalField(
@@ -214,23 +266,59 @@ class AcademicRecord(models.Model):
                 return "RETAINED"
         else:
             # Grades 4-10: Standard grading
-            if general_avg >= 75 and not critical_failing and failing_grades == 0:
-                return "PASSED"
-            elif general_avg >= 75 and failing_grades <= 2 and not critical_failing:
-                # Allow promotion with remedial for 1-2 subjects
+            if general_avg >= 75 and failing_grades == 0:
+                # User requirement: All subjects passed -> PROMOTED
                 return "PROMOTED"
+            elif general_avg >= 75 and failing_grades <= 2 and not critical_failing:
+                # Still allow PASSED if some subjects need remedial
+                return "PASSED"
             else:
                 return "FAILED"
 
     def update_computed_fields(self):
         """Update general average and remarks"""
         self.general_average = self.calculate_general_average()
-        self.remarks = self.determine_remarks()
+        # Only auto-determine if not already manually set to PROMOTED/RETAINED
+        if self.remarks not in ["PROMOTED", "RETAINED"]:
+            self.remarks = self.determine_remarks()
         self.save(update_fields=["general_average", "remarks", "updated_at"])
 
+    def retain(self):
+        """Logic to manual retain student in current grade"""
+        self.remarks = "RETAINED"
+        self.save(update_fields=["remarks"])
+
     def get_subjects_for_remedial(self):
-        """Return subjects that need remedial classes (final rating < 75)"""
-        return self.subject_grades.filter(final_rating__lt=75, final_rating__gte=60)
+        """Return subjects that need remedial classes (final rating < 75 OR needs_remedial flag set)"""
+        return self.subject_grades.filter(
+            models.Q(needs_remedial=True) | models.Q(final_rating__lt=75)
+        ).distinct()
+
+    def promote(self):
+        """Logic to promote student to the next grade level"""
+        if self.grade_level >= 10:
+            return None  # Cannot promote higher than Grade 10 here (graduation handled by signal)
+
+        next_grade = self.grade_level + 1
+
+        # Check if record already exists
+        existing = AcademicRecord.objects.filter(
+            student=self.student,
+            grade_level=next_grade,
+            school_year=self.school_year,  # Use same SY as default or let user change
+        ).first()
+
+        if existing:
+            return existing
+
+        return AcademicRecord.objects.create(
+            student=self.student,
+            school=self.school,
+            grade_level=next_grade,
+            section=self.section,  # Copy current section as starting point
+            school_year=self.school_year,
+            adviser_teacher=None,  # Clear adviser for new grade
+        )
 
 
 class LearningArea(models.Model):
@@ -383,17 +471,21 @@ class SubjectGrade(models.Model):
         self.final_rating = self.calculate_final_rating()
 
         # Determine if remedial is needed
-        if self.final_rating and 60 <= self.final_rating < 75:
+        if self.final_rating and self.final_rating < 75:
             self.needs_remedial = True
-        else:
+        elif (
+            self.final_rating
+            and self.final_rating >= 75
+            and not self.recomputed_final_grade
+        ):
             self.needs_remedial = False
 
         # Auto-generate remarks
         if self.final_rating:
-            if self.final_rating >= 75:
+            # Check recomputed grade first if it exists
+            final_to_check = self.get_final_rating()
+            if final_to_check >= 75:
                 self.remarks = "Passed"
-            elif self.final_rating >= 60:
-                self.remarks = "Needs Remedial"
             else:
                 self.remarks = "Failed"
 
@@ -422,17 +514,21 @@ class SubjectGrade(models.Model):
         self.final_rating = self.calculate_final_rating()
 
         # Determine if remedial is needed
-        if self.final_rating and 60 <= self.final_rating < 75:
+        if self.final_rating and self.final_rating < 75:
             self.needs_remedial = True
-        else:
+        elif (
+            self.final_rating
+            and self.final_rating >= 75
+            and not self.recomputed_final_grade
+        ):
             self.needs_remedial = False
 
         # Auto-generate remarks
         if self.final_rating:
-            if self.final_rating >= 75:
+            # Check recomputed grade first if it exists
+            final_to_check = self.get_final_rating()
+            if final_to_check >= 75:
                 self.remarks = "Passed"
-            elif self.final_rating >= 60:
-                self.remarks = "Needs Remedial"
             else:
                 self.remarks = "Failed"
 
@@ -444,7 +540,7 @@ class SubjectGrade(models.Model):
             self.academic_record.update_computed_fields()
 
 
-# Signal to auto-update grades when subject grades change
+# Signals
 
 
 @receiver([post_save, post_delete], sender=SubjectGrade)
@@ -452,3 +548,24 @@ def update_academic_record_on_grade_change(sender, instance, **kwargs):
     """Automatically update academic record when grades change"""
     if instance.academic_record_id:
         instance.academic_record.update_computed_fields()
+
+
+@receiver(post_save, sender=AcademicRecord)
+def update_student_status_on_academic_change(sender, instance, created, **kwargs):
+    """
+    Update student status based on academic records:
+    - ENROLLED when first record created (if PENDING)
+    - GRADUATED if Grade 10 is completed with PROMOTED remark
+    """
+    student = instance.student
+
+    # Handle Initial Enrollment
+    if created and student.status == "PENDING":
+        student.status = "ENROLLED"
+        student.save(update_fields=["status"])
+
+    # Handle Graduation
+    if instance.grade_level == 10 and instance.remarks == "PROMOTED":
+        if student.status != "GRADUATED":
+            student.status = "GRADUATED"
+            student.save(update_fields=["status"])

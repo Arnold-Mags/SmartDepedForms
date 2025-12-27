@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Profile - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">{{ profile.user.get_full_name|default:profile.user.username }}
+            </h1>
+            <p class="text-gray-600">Teacher Account Profile</p>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{% url 'teacher_list' %}"
+                class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition duration-150 shadow-sm">
+                Back to List
+            </a>
+            <a href="{% url 'teacher_edit' profile.pk %}"
+                class="bg-deped-blue text-white px-4 py-2 rounded-md font-medium hover:bg-blue-800 transition duration-150 shadow-sm">
+                Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Profile Info -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 border-b pb-4 mb-4">Account Information</h3>
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Username</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ profile.user.username }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Email</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ profile.user.email|default:"N/A" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">First Name</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ profile.user.first_name }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Last Name</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ profile.user.last_name }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 border-b pb-4 mb-4">Advisory Assignment</h3>
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Grade Level</dt>
+                        <dd class="mt-1 text-lg font-bold text-deped-blue">Grade {{ profile.grade_level }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Assigned Section</dt>
+                        <dd class="mt-1 text-lg font-bold text-deped-blue">{{ profile.section.name|default:"None Assigned" }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Role Badge / Quick Action -->
+        <div class="space-y-6">
+            <div class="bg-white shadow rounded-lg p-6 text-center">
+                <div
+                    class="h-20 w-20 bg-blue-100 text-deped-blue rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">
+                    {{ profile.user.username|first|upper }}
+                </div>
+                <h4 class="text-xl font-bold text-gray-900">{{ profile.user.username }}</h4>
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-1">TEACHER ROLE</p>
+                <div class="mt-4 pt-4 border-t">
+                    <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        Active Account
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+鼓

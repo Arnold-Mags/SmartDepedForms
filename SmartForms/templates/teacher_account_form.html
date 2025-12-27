@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_update %}Update Teacher{% else %}Add Teacher{% endif %} Account - DepEd SF10{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">{% if is_update %}Update Teacher Account{% else %}Create
+                Teacher Account{% endif %}</h3>
+            <a href="{% url 'teacher_list' %}" class="text-deped-blue hover:text-blue-900 text-sm font-medium">Back to
+                List</a>
+        </div>
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- User Account Section -->
+                <div class="space-y-4">
+                    <h4 class="text-md font-semibold text-gray-700 border-b pb-2">Account Information</h4>
+                    {% for field in user_form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Teacher Profile Section -->
+                <div class="space-y-4">
+                    <h4 class="text-md font-semibold text-gray-700 border-b pb-2">Advisory Assignment</h4>
+                    {% for field in profile_form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-200 flex justify-end">
+                <button type="submit"
+                    class="bg-deped-blue hover:bg-blue-800 text-white px-8 py-3 rounded-md font-medium shadow-sm transition duration-150">
+                    {% if is_update %}Update Teacher Account{% else %}Create Teacher Account{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+鼓

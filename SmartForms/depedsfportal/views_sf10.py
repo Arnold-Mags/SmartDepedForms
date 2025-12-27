@@ -52,7 +52,9 @@ class SF10PrintView(LoginRequiredMixin, TeacherAccessMixin, View):
         if HTML:
             # Generate PDF
             font_config = FontConfiguration()
-            html = HTML(string=html_string)
+            # Use request.build_absolute_uri('/') as base_url if available, or static root
+            base_url = request.build_absolute_uri("/")
+            html = HTML(string=html_string, base_url=base_url)
             result = html.write_pdf(font_config=font_config)
 
             # Return PDF response

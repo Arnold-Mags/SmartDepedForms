@@ -1,5 +1,14 @@
 from django import forms
-from .models import School, Student, AcademicRecord, SubjectGrade, LearningArea
+from .models import (
+    School,
+    Student,
+    AcademicRecord,
+    SubjectGrade,
+    LearningArea,
+    Section,
+    TeacherProfile,
+)
+from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 
 
@@ -41,6 +50,15 @@ class AcademicRecordForm(TailwindFormMixin, forms.ModelForm):
         exclude = ["created_at", "updated_at", "general_average", "remarks"]
         # student is handled in view (hidden or preset)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["section"].queryset = Section.objects.all()
+        # Filter advisers to only show users in the Teacher group
+        self.fields["adviser_teacher"].queryset = User.objects.filter(
+            groups__name="Teacher"
+        )
+        self.fields["adviser_teacher"].label = "Adviser Teacher"
+
 
 class SubjectGradeForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
@@ -60,3 +78,38 @@ class LearningAreaForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = LearningArea
         fields = "__all__"
+
+
+class SectionForm(TailwindFormMixin, forms.ModelForm):
+    class Meta:
+        model = Section
+        fields = "__all__"
+
+
+class TeacherProfileForm(TailwindFormMixin, forms.ModelForm):
+    class Meta:
+        model = TeacherProfile
+        fields = ["grade_level", "section"]
+
+
+class UserForm(TailwindFormMixin, forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ["username", "first_name", "last_name", "email", "password"]
+
+
+class SubjectGradeRemedialForm(TailwindFormMixin, forms.ModelForm):
+    class Meta:
+        model = SubjectGrade
+        fields = [
+            "remedial_conducted_from",
+            "remedial_conducted_to",
+            "remedial_mark",
+            "remarks",
+        ]
+        widgets = {
+            "remedial_conducted_from": forms.DateInput(attrs={"type": "date"}),
+            "remedial_conducted_to": forms.DateInput(attrs={"type": "date"}),
+        }

@@ -17,6 +17,8 @@ class DashboardRedirectView(LoginRequiredMixin, RedirectView):
             return "/admin/"  # Admin goes to Django Admin
         elif user.groups.filter(name="Teacher").exists():
             return "/dashboard/teacher/"
+        elif user.groups.filter(name="Registrar").exists():
+            return "/dashboard/teacher/"  # Registrar uses same dashboard for student management
         elif user.groups.filter(name="Principal").exists():
             return "/dashboard/principal/"
         else:
@@ -30,13 +32,36 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     paginate_by = 20
 
     def test_func(self):
+        user = self.request.user
         return (
-            self.request.user.groups.filter(name="Teacher").exists()
-            or self.request.user.is_superuser
+            user.groups.filter(name__in=["Teacher", "Registrar"]).exists()
+            or user.is_superuser
         )
 
     def get_queryset(self):
-        return Student.objects.all().order_by("last_name", "first_name")
+        user = self.request.user
+        qs = Student.objects.all()
+
+        # Registrar and Superuser see all students
+        if user.is_superuser or user.groups.filter(name="Registrar").exists():
+            return qs.order_by("last_name", "first_name")
+
+        # Teachers only see students in their advisory
+        try:
+            profile = user.teacher_profile
+            # Filter students who have an academic record in the teacher's grade and section
+            # We assume the current or latest academic record
+            return (
+                qs.filter(
+                    academic_records__grade_level=profile.grade_level,
+                    academic_records__section=profile.section,
+                )
+                .distinct()
+                .order_by("last_name", "first_name")
+            )
+        except Exception:
+            # If no profile, they see no students (or maybe we show an error)
+            return Student.objects.none()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -146,3 +171,23 @@ def dashboard_stats_api(request):
             "dropped_count": dropped_count,
         }
     )
+
+
+def get_adviser_api(request):
+    """
+    API endpoint to get the adviser details for a given section
+    """
+    section_id = request.GET.get("section_id")
+    if not section_id:
+        return JsonResponse({"adviser_id": "", "adviser_name": ""})
+
+    try:
+        profile = TeacherProfile.objects.select_related("user").get(
+            section_id=section_id
+        )
+        name = profile.user.get_full_name() or profile.user.username
+        if profile.user.last_name and profile.user.first_name:
+            name = f"{profile.user.last_name}, {profile.user.first_name}"
+        return JsonResponse({"adviser_id": profile.user.id, "adviser_name": name})
+    except TeacherProfile.DoesNotExist:
+        return JsonResponse({"adviser_id": "", "adviser_name": ""})

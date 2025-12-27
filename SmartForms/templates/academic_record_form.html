@@ -5,3 +5,37 @@
 <a href="{% url 'teacher_dashboard' %}" class="text-deped-blue hover:underline">← Back to Dashboard</a>
 {% endblock %}
 {% block form_title %}Enroll in Grade Level (Create Academic Record){% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sectionSelect = document.querySelector('select[name="section"]');
+        const adviserSelect = document.querySelector('select[name="adviser_teacher"]');
+
+        if (sectionSelect && adviserSelect) {
+            // Function to fetch and update adviser
+            const updateAdviser = () => {
+                const sectionId = sectionSelect.value;
+                if (sectionId) {
+                    fetch(`/api/get-adviser/?section_id=${sectionId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.adviser_id) {
+                                adviserSelect.value = data.adviser_id;
+                            }
+                        })
+                        .catch(error => console.error('Error fetching adviser:', error));
+                }
+            };
+
+            // Update on change
+            sectionSelect.addEventListener('change', updateAdviser);
+
+            // Initial check if section is already selected (e.g. on page load)
+            if (sectionSelect.value) {
+                updateAdviser();
+            }
+        }
+    });
+</script>
+{% endblock %}

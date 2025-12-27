@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html>
 
 <head>
@@ -216,9 +217,21 @@
         <div class="watermark">SF10-ES</div>
 
         <div class="header">
-            <h1>Department of Education</h1>
-            <h2>Republic of the Philippines</h2>
-            <h1 style="margin-top: 10px;">Learner Permanent Academic Record for Elementary School (SF10-ES)</h1>
+            <table style="width: 100%; border: none; margin-bottom: 0;">
+                <tr style="border: none;">
+                    <td style="width: 15%; text-align: left; border: none; padding: 0;">
+                        <img src="{% static 'depedkag.PNG' %}" style="height: 60px;">
+                    </td>
+                    <td style="width: 70%; text-align: center; border: none; padding: 0;">
+                        <h1 style="border: none; margin: 0;">Department of Education</h1>
+                        <h2 style="border: none; margin: 0;">Republic of the Philippines</h2>
+                    </td>
+                    <td style="width: 15%; text-align: right; border: none; padding: 0;">
+                        <img src="{% static 'logo.png' %}" style="height: 60px;">
+                    </td>
+                </tr>
+            </table>
+            <h1 style="margin-top: 5px;">Learner Permanent Academic Record for Elementary School (SF10-ES)</h1>
             <div class="form-code">(Formerly Form 137) | Revised 2025 based on DepEd Order No. 10, s. 2024</div>
         </div>
 
@@ -323,7 +336,7 @@
                 </div>
                 <div class="record-info-item">
                     <span class="record-info-label">Adviser/Teacher:</span>
-                    <span>{{ record.adviser_teacher }}</span>
+                    <span>{{ record.adviser_teacher.get_full_name|default:record.adviser_teacher.username }}</span>
                 </div>
             </div>
 
@@ -430,7 +443,7 @@
                 </div>
                 <div class="record-info-item">
                     <span class="record-info-label">Adviser/Teacher:</span>
-                    <span>{{ record.adviser_teacher }}</span>
+                    <span>{{ record.adviser_teacher.get_full_name|default:record.adviser_teacher.username }}</span>
                 </div>
             </div>
 

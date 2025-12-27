@@ -23,6 +23,7 @@ from depedsfportal.views_dashboard import (
     TeacherDashboardView,
     PrincipalDashboardView,
     dashboard_stats_api,
+    get_adviser_api,
 )
 from depedsfportal.views_forms import (
     SchoolUpdateView,
@@ -37,6 +38,16 @@ from depedsfportal.views_forms import (
     SubjectGradeCreateView,
     SubjectGradeUpdateView,
     SubjectGradeDeleteView,
+    SectionListView,
+    SectionCreateView,
+    SectionUpdateView,
+    TeacherListView,
+    TeacherCreateView,
+    TeacherUpdateView,
+    TeacherDetailView,
+    AcademicRecordPromoteView,
+    AcademicRecordRetainView,
+    SubjectGradeRemedialUpdateView,
 )
 from depedsfportal.views_reports import (
     ReportDashboardView,
@@ -71,6 +82,7 @@ urlpatterns = [
     ),
     # API endpoints
     path("api/dashboard-stats/", dashboard_stats_api, name="dashboard_stats_api"),
+    path("api/get-adviser/", get_adviser_api, name="get_adviser_api"),
     # Forms - Principal
     path("school/settings/", SchoolUpdateView.as_view(), name="school_settings"),
     # Forms - Teacher
@@ -121,6 +133,30 @@ urlpatterns = [
     # SF10 Print
     path("sf10/print/<str:lrn>/", SF10PrintView.as_view(), name="sf10_print"),
     path("sf10/preview/<str:lrn>/", SF10PreviewView.as_view(), name="sf10_preview"),
+    # Section & Teacher Management
+    path("sections/", SectionListView.as_view(), name="section_list"),
+    path("sections/add/", SectionCreateView.as_view(), name="section_add"),
+    path("sections/<int:pk>/edit/", SectionUpdateView.as_view(), name="section_edit"),
+    path("teachers/", TeacherListView.as_view(), name="teacher_list"),
+    path("teachers/add/", TeacherCreateView.as_view(), name="teacher_add"),
+    path("teachers/<int:pk>/", TeacherDetailView.as_view(), name="teacher_detail"),
+    path("teachers/<int:pk>/edit/", TeacherUpdateView.as_view(), name="teacher_edit"),
+    # Academic Evaluation Actions
+    path(
+        "record/<int:pk>/promote/",
+        AcademicRecordPromoteView.as_view(),
+        name="record_promote",
+    ),
+    path(
+        "record/<int:pk>/retain/",
+        AcademicRecordRetainView.as_view(),
+        name="record_retain",
+    ),
+    path(
+        "grade/<int:pk>/remedial/",
+        SubjectGradeRemedialUpdateView.as_view(),
+        name="grade_remedial",
+    ),
 ]
 
 from django.conf import settings
