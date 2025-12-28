@@ -179,8 +179,7 @@ class ExportReportPDFView(LoginRequiredMixin, PrincipalAccessMixin, View):
                 f'inline; filename="report_{datetime.date.today()}.pdf"'
             )
             response["Content-Transfer-Encoding"] = "binary"
-            with response as f:
-                f.write(result)
+            response.write(result)
             return response
         else:
             return HttpResponse("WeasyPrint not installed", status=500)
