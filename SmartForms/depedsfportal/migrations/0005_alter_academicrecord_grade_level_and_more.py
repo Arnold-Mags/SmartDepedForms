@@ -3,21 +3,77 @@
 from django.db import migrations, models
 
 
+def cleanup_data(apps, schema_editor):
+    from django.db import connection
+
+    cursor = connection.cursor()
+    # 1. Broadly clear 'JUANA DELA TORRE' from columns that might be cast to int or FK
+    # We'll check common tables in depedsfportal
+    tables = [
+        "depedsfportal_academicrecord",
+        "depedsfportal_student",
+        "depedsfportal_learningarea",
+        "depedsfportal_school",
+        "depedsfportal_subjectgrade",
+    ]
+    for table in tables:
+        try:
+            # We use a broad UPDATE to clear the string from any CharField that might be involved
+            # Postgres doesn't easily let us loop columns without dynamic SQL, but we know the likely ones.
+            for col in [
+                "adviser_teacher",
+                "section",
+                "grade_level",
+                "status",
+                "remarks",
+            ]:
+                try:
+                    cursor.execute(
+                        f"UPDATE {table} SET {col} = NULL WHERE {col} = 'JUANA DELA TORRE'"
+                    )
+                except:
+                    pass
+        except:
+            pass
+
+    # 2. Specific fix for grade_level in AcademicRecord
+    cursor.execute(
+        "UPDATE depedsfportal_academicrecord SET grade_level = 7 WHERE grade_level::text !~ '^[0-9]+$'"
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('depedsfportal', '0004_school_logo'),
+        ("depedsfportal", "0004_school_logo"),
     ]
 
     operations = [
+        migrations.RunPython(cleanup_data),
         migrations.AlterField(
-            model_name='academicrecord',
-            name='grade_level',
-            field=models.IntegerField(choices=[(7, 'Grade 7'), (8, 'Grade 8'), (9, 'Grade 9'), (10, 'Grade 10')]),
+            model_name="academicrecord",
+            name="grade_level",
+            field=models.IntegerField(
+                choices=[
+                    (7, "Grade 7"),
+                    (8, "Grade 8"),
+                    (9, "Grade 9"),
+                    (10, "Grade 10"),
+                ]
+            ),
         ),
         migrations.AlterField(
-            model_name='learningarea',
-            name='applicable_grades',
-            field=models.CharField(choices=[('7', 'Grade 7'), ('8', 'Grade 8'), ('9', 'Grade 9'), ('10', 'Grade 10'), ('ALL', 'All Grades')], max_length=10),
+            model_name="learningarea",
+            name="applicable_grades",
+            field=models.CharField(
+                choices=[
+                    ("7", "Grade 7"),
+                    ("8", "Grade 8"),
+                    ("9", "Grade 9"),
+                    ("10", "Grade 10"),
+                    ("ALL", "All Grades"),
+                ],
+                max_length=10,
+            ),
         ),
     ]

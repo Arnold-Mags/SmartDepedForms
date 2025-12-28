@@ -5,17 +5,40 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def cleanup_adviser_data(apps, schema_editor):
+    from django.db import connection
+
+    cursor = connection.cursor()
+    # 1. Make the column nullable first so we can clear bad data
+    cursor.execute(
+        "ALTER TABLE depedsfportal_academicrecord ALTER COLUMN adviser_teacher DROP NOT NULL"
+    )
+
+    # 2. Clear anything that isn't a valid integer (User ID) from adviser_teacher
+    # This specifically addresses the 'JUANA DELA TORRE' DataError.
+    cursor.execute(
+        "UPDATE depedsfportal_academicrecord SET adviser_teacher = NULL WHERE adviser_teacher IS NOT NULL AND adviser_teacher !~ '^[0-9]+$'"
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('depedsfportal', '0008_finalize_section_field'),
+        ("depedsfportal", "0008_finalize_section_field"),
     ]
 
     operations = [
+        migrations.RunPython(cleanup_adviser_data),
         migrations.AlterField(
-            model_name='academicrecord',
-            name='adviser_teacher',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='advised_records', to=settings.AUTH_USER_MODEL),
+            model_name="academicrecord",
+            name="adviser_teacher",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="advised_records",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]
