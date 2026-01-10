@@ -59,8 +59,17 @@ class TeacherDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             selected_year = current_year.year_label if current_year else None
 
         # Apply Academic Year Filter Globally if a year is selected/active
+        # Apply Academic Year Filter Globally if a year is selected/active
         if selected_year:
-            qs = qs.filter(academic_records__school_year=selected_year).distinct()
+            # For Registrars/Superusers, we want to see ENROLLED students in this year
+            # PLUS any PENDING students (who are waiting for enrollment)
+            if user.is_superuser or user.groups.filter(name="Registrar").exists():
+                qs = qs.filter(
+                    Q(academic_records__school_year=selected_year) | Q(status="PENDING")
+                ).distinct()
+            else:
+                # Teachers only see records for the specific year
+                qs = qs.filter(academic_records__school_year=selected_year).distinct()
 
         # Prefetch the specific academic record for the selected year
         record_prefetch = Prefetch(

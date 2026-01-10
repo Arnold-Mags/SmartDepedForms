@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware", #render
+    #"whitenoise.middleware.WhiteNoiseMiddleware", #render
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -79,36 +79,15 @@ WSGI_APPLICATION = "SmartForms.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    #Local Development
-   # "default": {
-       # 'ENGINE': 'django.db.backends.sqlite3',
-      #  'NAME': BASE_DIR / 'db.sqlite3',
-      #  "ENGINE": "django.db.backends.postgresql",
-      #  "NAME": "SmartFormsDB",
-     #   "USER": "postgres",
-     #   "PASSWORD": "admin12345",
-     #   "HOST": "localhost",
-     #   "PORT": "5432",
-   # }
-
-    #Render Deployment
-     #'default': {
-     # #  'ENGINE': 'django.db.backends.postgresql',
-     #   'NAME': 'smartforms_depedsf',
-      #  'USER': 'smartforms_depedsf_user',
-      #  'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',
-    #    'HOST': 'dpg-d56l343uibrs739m9ta0-a',
-    #    'PORT': '5432',
-   # }
-
-     # Using Render's DATABASE_URL environment variable
-    'default':{
-       'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'smartforms_depedsf',  # database name
-        'USER': 'smartforms_depedsf_user',  # username
-        'PASSWORD': 'pLHvFSrneNHIk6LAswLpLXIp7gSCCo0a',  # password
-        'HOST': 'dpg-d56l343uibrs739m9ta0-a.virginia-postgres.render.com',  # host
-        'PORT': '5432',  # default PostgreSQL port
+    "default": {
+        #'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': BASE_DIR / 'db.sqlite3',
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "SmartFormsDB",
+        "USER": "postgres",
+        "PASSWORD": "admin12345",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
@@ -151,7 +130,7 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+#STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")

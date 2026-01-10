@@ -11,6 +11,7 @@ from .models import (
     LearningArea,
     Section,
     TeacherProfile,
+    AcademicYear,
 )
 from django.contrib.auth.models import User, Group
 from .forms import (
@@ -86,8 +87,65 @@ class StudentCreateView(LoginRequiredMixin, RegistrarAccessMixin, CreateView):
     success_url = reverse_lazy("teacher_dashboard")
 
     def form_valid(self, form):
-        messages.success(self.request, "Student added successfully.")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        # Auto-create AcademicRecord for the current school year
+        try:
+            student = self.object
+            grade_level = form.cleaned_data.get("grade_level")
+            section = form.cleaned_data.get("section")
+
+            # Only create AcademicRecord if grade_level is provided
+            if grade_level:
+                # Get current academic year
+                current_year = AcademicYear.get_current_year()
+
+                if current_year:
+                    # Create the academic record
+                    # Note: School is required. We'll use the default one.
+                    school = School.objects.first()
+                    if not school:
+                        school = School.objects.create(
+                            school_id="123456", name="Default School", address="Address"
+                        )
+
+                    AcademicRecord.objects.create(
+                        student=student,
+                        school=school,
+                        grade_level=grade_level,
+                        section=section,
+                        school_year=current_year.year_label,
+                        # adviser_teacher will be set by the principal/registrar later or if section has one
+                    )
+
+                    # Check for "Pending" status and update to "Enrolled"
+                    if student.status == "PENDING":
+                        student.status = "ENROLLED"
+                        student.save(update_fields=["status"])
+
+                    messages.success(
+                        self.request,
+                        f"Student added and enrolled in Grade {grade_level}.",
+                    )
+                else:
+                    messages.warning(
+                        self.request,
+                        "Student added, but could not be enrolled: No active Academic Year found.",
+                    )
+            else:
+                messages.success(
+                    self.request, "Student added successfully (Pending Enrollment)."
+                )
+
+        except Exception as e:
+            # Log error (or print for now)
+            print(f"Error creating enrollment record: {e}")
+            messages.warning(
+                self.request,
+                f"Student added, but enrollment record creation failed: {e}",
+            )
+
+        return response
 
 
 class StudentUpdateView(LoginRequiredMixin, RegistrarAccessMixin, UpdateView):

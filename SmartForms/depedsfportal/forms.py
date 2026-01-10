@@ -36,6 +36,27 @@ class SchoolForm(TailwindFormMixin, forms.ModelForm):
 
 
 class StudentForm(TailwindFormMixin, forms.ModelForm):
+    grade_level = forms.ChoiceField(
+        choices=Section.GRADE_CHOICES,
+        widget=forms.Select(
+            attrs={
+                "class": "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            }
+        ),
+        required=False,
+        help_text="Optional. Leave blank to just register student without enrollment.",
+    )
+    section = forms.ModelChoiceField(
+        queryset=Section.objects.all(),
+        required=False,
+        widget=forms.Select(
+            attrs={
+                "class": "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            }
+        ),
+        help_text="Optional. Assign directly to a section.",
+    )
+
     class Meta:
         model = Student
         fields = "__all__"
